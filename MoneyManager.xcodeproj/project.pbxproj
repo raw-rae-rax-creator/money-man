@@ -1,0 +1,506 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* MoneyManagerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000001 /* MoneyManagerApp.swift */; };
+		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000002 /* ContentView.swift */; };
+		A10000000000000000000003 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000003 /* DashboardView.swift */; };
+		A10000000000000000000004 /* TransactionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000004 /* TransactionListView.swift */; };
+		A10000000000000000000005 /* AddTransactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000005 /* AddTransactionView.swift */; };
+		A10000000000000000000006 /* GoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000006 /* GoalsView.swift */; };
+		A10000000000000000000007 /* BillsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000007 /* BillsView.swift */; };
+		A10000000000000000000008 /* ReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000008 /* ReportsView.swift */; };
+		A10000000000000000000009 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000009 /* SettingsView.swift */; };
+		A10000000000000000000010 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* Assets.xcassets */; };
+		A10000000000000000000011 /* MoneyManagerModel.xcdatamodeld in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* MoneyManagerModel.xcdatamodeld */; };
+		A10000000000000000000012 /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000012 /* Transaction.swift */; };
+		A10000000000000000000013 /* Category.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000013 /* Category.swift */; };
+		A10000000000000000000014 /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000014 /* Account.swift */; };
+		A10000000000000000000015 /* Budget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000015 /* Budget.swift */; };
+		A10000000000000000000016 /* SavingsGoal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000016 /* SavingsGoal.swift */; };
+		A10000000000000000000017 /* Bill.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000017 /* Bill.swift */; };
+		A10000000000000000000018 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000018 /* AppSettings.swift */; };
+		A10000000000000000000019 /* DatabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000019 /* DatabaseService.swift */; };
+		A10000000000000000000020 /* SecurityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000020 /* SecurityService.swift */; };
+		A10000000000000000000021 /* ImportExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000021 /* ImportExportService.swift */; };
+		A10000000000000000000022 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000022 /* NotificationService.swift */; };
+		A10000000000000000000023 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000023 /* Extensions.swift */; };
+		A10000000000000000000024 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000024 /* DashboardViewModel.swift */; };
+		A10000000000000000000025 /* TransactionListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000025 /* TransactionListViewModel.swift */; };
+		A10000000000000000000026 /* AddTransactionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000026 /* AddTransactionViewModel.swift */; };
+		A10000000000000000000027 /* CategoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000027 /* CategoryViewModel.swift */; };
+		A10000000000000000000028 /* BudgetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000028 /* BudgetViewModel.swift */; };
+		A10000000000000000000029 /* GoalsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000029 /* GoalsViewModel.swift */; };
+		A10000000000000000000030 /* BillsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000030 /* BillsViewModel.swift */; };
+		A10000000000000000000031 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000031 /* SettingsViewModel.swift */; };
+		A10000000000000000000032 /* TransactionRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000032 /* TransactionRowView.swift */; };
+		A10000000000000000000033 /* BudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000033 /* BudgetView.swift */; };
+		A10000000000000000000034 /* CategoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000034 /* CategoryListView.swift */; };
+		A10000000000000000000035 /* LockScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000035 /* LockScreenView.swift */; };
+		A10000000000000000000036 /* TransactionEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000036 /* TransactionEntity.swift */; };
+		A10000000000000000000037 /* CategoryEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000037 /* CategoryEntity.swift */; };
+		A10000000000000000000038 /* AccountEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000038 /* AccountEntity.swift */; };
+		A10000000000000000000039 /* BudgetEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000039 /* BudgetEntity.swift */; };
+		A10000000000000000000040 /* Debt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000040 /* Debt.swift */; };
+		A10000000000000000000041 /* DebtsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000041 /* DebtsViewModel.swift */; };
+		A10000000000000000000042 /* DebtsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000042 /* DebtsView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		B10000000000000000000001 /* MoneyManagerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyManagerApp.swift; sourceTree = "<group>"; };
+		B10000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B10000000000000000000003 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		B10000000000000000000004 /* TransactionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionListView.swift; sourceTree = "<group>"; };
+		B10000000000000000000005 /* AddTransactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTransactionView.swift; sourceTree = "<group>"; };
+		B10000000000000000000006 /* GoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsView.swift; sourceTree = "<group>"; };
+		B10000000000000000000007 /* BillsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillsView.swift; sourceTree = "<group>"; };
+		B10000000000000000000008 /* ReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportsView.swift; sourceTree = "<group>"; };
+		B10000000000000000000009 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B10000000000000000000010 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B10000000000000000000012 /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
+		B10000000000000000000013 /* Category.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Category.swift; sourceTree = "<group>"; };
+		B10000000000000000000014 /* Account.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Account.swift; sourceTree = "<group>"; };
+		B10000000000000000000015 /* Budget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Budget.swift; sourceTree = "<group>"; };
+		B10000000000000000000016 /* SavingsGoal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavingsGoal.swift; sourceTree = "<group>"; };
+		B10000000000000000000017 /* Bill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bill.swift; sourceTree = "<group>"; };
+		B10000000000000000000018 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		B10000000000000000000019 /* DatabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseService.swift; sourceTree = "<group>"; };
+		B10000000000000000000020 /* SecurityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityService.swift; sourceTree = "<group>"; };
+		B10000000000000000000021 /* ImportExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportExportService.swift; sourceTree = "<group>"; };
+		B10000000000000000000022 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		B10000000000000000000023 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		B10000000000000000000024 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000025 /* TransactionListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionListViewModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000026 /* AddTransactionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTransactionViewModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000027 /* CategoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryViewModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000028 /* BudgetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetViewModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000029 /* GoalsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsViewModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000030 /* BillsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillsViewModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000031 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000032 /* TransactionRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionRowView.swift; sourceTree = "<group>"; };
+		B10000000000000000000033 /* BudgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetView.swift; sourceTree = "<group>"; };
+		B10000000000000000000034 /* CategoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryListView.swift; sourceTree = "<group>"; };
+		B10000000000000000000035 /* LockScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenView.swift; sourceTree = "<group>"; };
+		B10000000000000000000036 /* TransactionEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionEntity.swift; sourceTree = "<group>"; };
+		B10000000000000000000037 /* CategoryEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryEntity.swift; sourceTree = "<group>"; };
+		B10000000000000000000038 /* AccountEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountEntity.swift; sourceTree = "<group>"; };
+		B10000000000000000000039 /* BudgetEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetEntity.swift; sourceTree = "<group>"; };
+		B10000000000000000000040 /* Debt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Debt.swift; sourceTree = "<group>"; };
+		B10000000000000000000041 /* DebtsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebtsViewModel.swift; sourceTree = "<group>"; };
+		B10000000000000000000042 /* DebtsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebtsView.swift; sourceTree = "<group>"; };
+		B10000000000000000000099 /* MoneyManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoneyManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F10000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C10000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000002 /* MoneyManager */,
+				C10000000000000000000099 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C10000000000000000000002 /* MoneyManager */ = {
+			isa = PBXGroup;
+			children = (
+				C10000000000000000000003 /* Models */,
+				C10000000000000000000004 /* Views */,
+				C10000000000000000000005 /* ViewModels */,
+				C10000000000000000000006 /* Services */,
+				C10000000000000000000007 /* Utils */,
+				B10000000000000000000001 /* MoneyManagerApp.swift */,
+				B10000000000000000000010 /* Assets.xcassets */,
+				B10000000000000000000011 /* MoneyManagerModel.xcdatamodeld */,
+			);
+			path = MoneyManager;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000012 /* Transaction.swift */,
+				B10000000000000000000013 /* Category.swift */,
+				B10000000000000000000014 /* Account.swift */,
+				B10000000000000000000015 /* Budget.swift */,
+				B10000000000000000000016 /* SavingsGoal.swift */,
+				B10000000000000000000017 /* Bill.swift */,
+				B10000000000000000000018 /* AppSettings.swift */,
+				B10000000000000000000040 /* Debt.swift */,
+				B10000000000000000000036 /* TransactionEntity.swift */,
+				B10000000000000000000037 /* CategoryEntity.swift */,
+				B10000000000000000000038 /* AccountEntity.swift */,
+				B10000000000000000000039 /* BudgetEntity.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000004 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000002 /* ContentView.swift */,
+				B10000000000000000000003 /* DashboardView.swift */,
+				B10000000000000000000004 /* TransactionListView.swift */,
+				B10000000000000000000005 /* AddTransactionView.swift */,
+				B10000000000000000000006 /* GoalsView.swift */,
+				B10000000000000000000007 /* BillsView.swift */,
+				B10000000000000000000008 /* ReportsView.swift */,
+				B10000000000000000000009 /* SettingsView.swift */,
+				B10000000000000000000032 /* TransactionRowView.swift */,
+				B10000000000000000000033 /* BudgetView.swift */,
+				B10000000000000000000034 /* CategoryListView.swift */,
+				B10000000000000000000035 /* LockScreenView.swift */,
+				B10000000000000000000042 /* DebtsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000005 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000024 /* DashboardViewModel.swift */,
+				B10000000000000000000025 /* TransactionListViewModel.swift */,
+				B10000000000000000000026 /* AddTransactionViewModel.swift */,
+				B10000000000000000000027 /* CategoryViewModel.swift */,
+				B10000000000000000000028 /* BudgetViewModel.swift */,
+				B10000000000000000000029 /* GoalsViewModel.swift */,
+				B10000000000000000000030 /* BillsViewModel.swift */,
+				B10000000000000000000031 /* SettingsViewModel.swift */,
+				B10000000000000000000041 /* DebtsViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000006 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000019 /* DatabaseService.swift */,
+				B10000000000000000000020 /* SecurityService.swift */,
+				B10000000000000000000021 /* ImportExportService.swift */,
+				B10000000000000000000022 /* NotificationService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000007 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000023 /* Extensions.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000099 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B10000000000000000000099 /* MoneyManager.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D10000000000000000000001 /* MoneyManager */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E10000000000000000000003 /* Build configuration list for PBXNativeTarget "MoneyManager" */;
+			buildPhases = (
+				F10000000000000000000001 /* Sources */,
+				F10000000000000000000002 /* Resources */,
+				F10000000000000000000003 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MoneyManager;
+			productName = MoneyManager;
+			productReference = B10000000000000000000099 /* MoneyManager.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		G10000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					D10000000000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = E10000000000000000000001 /* Build configuration list for PBXProject "MoneyManager" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = C10000000000000000000001;
+			productRefGroup = C10000000000000000000099 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D10000000000000000000001 /* MoneyManager */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F10000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000010 /* Assets.xcassets in Resources */,
+				A10000000000000000000011 /* MoneyManagerModel.xcdatamodeld in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F10000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* MoneyManagerApp.swift in Sources */,
+				A10000000000000000000002 /* ContentView.swift in Sources */,
+				A10000000000000000000003 /* DashboardView.swift in Sources */,
+				A10000000000000000000004 /* TransactionListView.swift in Sources */,
+				A10000000000000000000005 /* AddTransactionView.swift in Sources */,
+				A10000000000000000000006 /* GoalsView.swift in Sources */,
+				A10000000000000000000007 /* BillsView.swift in Sources */,
+				A10000000000000000000008 /* ReportsView.swift in Sources */,
+				A10000000000000000000009 /* SettingsView.swift in Sources */,
+				A10000000000000000000012 /* Transaction.swift in Sources */,
+				A10000000000000000000013 /* Category.swift in Sources */,
+				A10000000000000000000014 /* Account.swift in Sources */,
+				A10000000000000000000015 /* Budget.swift in Sources */,
+				A10000000000000000000016 /* SavingsGoal.swift in Sources */,
+				A10000000000000000000017 /* Bill.swift in Sources */,
+				A10000000000000000000018 /* AppSettings.swift in Sources */,
+				A10000000000000000000019 /* DatabaseService.swift in Sources */,
+				A10000000000000000000020 /* SecurityService.swift in Sources */,
+				A10000000000000000000021 /* ImportExportService.swift in Sources */,
+				A10000000000000000000022 /* NotificationService.swift in Sources */,
+				A10000000000000000000023 /* Extensions.swift in Sources */,
+				A10000000000000000000024 /* DashboardViewModel.swift in Sources */,
+				A10000000000000000000025 /* TransactionListViewModel.swift in Sources */,
+				A10000000000000000000026 /* AddTransactionViewModel.swift in Sources */,
+				A10000000000000000000027 /* CategoryViewModel.swift in Sources */,
+				A10000000000000000000028 /* BudgetViewModel.swift in Sources */,
+				A10000000000000000000029 /* GoalsViewModel.swift in Sources */,
+				A10000000000000000000030 /* BillsViewModel.swift in Sources */,
+				A10000000000000000000031 /* SettingsViewModel.swift in Sources */,
+				A10000000000000000000032 /* TransactionRowView.swift in Sources */,
+				A10000000000000000000033 /* BudgetView.swift in Sources */,
+				A10000000000000000000034 /* CategoryListView.swift in Sources */,
+				A10000000000000000000035 /* LockScreenView.swift in Sources */,
+				A10000000000000000000036 /* TransactionEntity.swift in Sources */,
+				A10000000000000000000037 /* CategoryEntity.swift in Sources */,
+				A10000000000000000000038 /* AccountEntity.swift in Sources */,
+				A10000000000000000000039 /* BudgetEntity.swift in Sources */,
+				A10000000000000000000040 /* Debt.swift in Sources */,
+				A10000000000000000000041 /* DebtsViewModel.swift in Sources */,
+				A10000000000000000000042 /* DebtsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		H10000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		H10000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		H10000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Z4U8HCNL8K;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MoneyManager/Info.plist;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is not required";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Use Face ID to secure your financial data";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is not required";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.khan.moneymanager.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		H10000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Z4U8HCNL8K;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MoneyManager/Info.plist;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is not required";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Use Face ID to secure your financial data";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is not required";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.khan.moneymanager.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E10000000000000000000001 /* Build configuration list for PBXProject "MoneyManager" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				H10000000000000000000001 /* Debug */,
+				H10000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E10000000000000000000003 /* Build configuration list for PBXNativeTarget "MoneyManager" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				H10000000000000000000003 /* Debug */,
+				H10000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		B10000000000000000000011 /* MoneyManagerModel.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+			);
+			path = MoneyManagerModel.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = G10000000000000000000001 /* Project object */;
+}
