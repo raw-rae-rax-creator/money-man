@@ -9,6 +9,14 @@ class DatabaseService {
     private init() {
         container = NSPersistentContainer(name: "MoneyManagerModel")
 
+        // An empty model means MoneyManagerModel.momd isn't in the bundle — the .xcdatamodeld
+        // must be in "Compile Sources", not "Copy Bundle Resources". Fail here with a clear
+        // message instead of "must have a valid NSEntityDescription" on the first insert.
+        precondition(
+            !container.managedObjectModel.entities.isEmpty,
+            "Core Data model 'MoneyManagerModel' not found. Add MoneyManagerModel.xcdatamodeld to the target's Compile Sources build phase."
+        )
+
         var loadError: Error?
         container.loadPersistentStores { _, error in
             loadError = error

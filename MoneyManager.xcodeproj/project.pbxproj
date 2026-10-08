@@ -17,7 +17,7 @@
 		A10000000000000000000008 /* ReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000008 /* ReportsView.swift */; };
 		A10000000000000000000009 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000009 /* SettingsView.swift */; };
 		A10000000000000000000010 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000010 /* Assets.xcassets */; };
-		A10000000000000000000011 /* MoneyManagerModel.xcdatamodeld in Resources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* MoneyManagerModel.xcdatamodeld */; };
+		A10000000000000000000011 /* MoneyManagerModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000011 /* MoneyManagerModel.xcdatamodeld */; };
 		A10000000000000000000012 /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000012 /* Transaction.swift */; };
 		A10000000000000000000013 /* Category.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000013 /* Category.swift */; };
 		A10000000000000000000014 /* Account.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10000000000000000000014 /* Account.swift */; };
@@ -99,6 +99,7 @@
 		B10000000000000000000045 /* AccountsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountsView.swift; sourceTree = "<group>"; };
 		B10000000000000000000044 /* AccountViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewModel.swift; sourceTree = "<group>"; };
 		B10000000000000000000043 /* Currency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Currency.swift; sourceTree = "<group>"; };
+		B10000000000000000000046 /* MoneyManagerModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MoneyManagerModel.xcdatamodel; sourceTree = "<group>"; };
 		B10000000000000000000099 /* MoneyManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoneyManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -280,7 +281,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000010 /* Assets.xcassets in Resources */,
-				A10000000000000000000011 /* MoneyManagerModel.xcdatamodeld in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -292,6 +292,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000001 /* MoneyManagerApp.swift in Sources */,
+				A10000000000000000000011 /* MoneyManagerModel.xcdatamodeld in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* DashboardView.swift in Sources */,
 				A10000000000000000000004 /* TransactionListView.swift in Sources */,
@@ -507,7 +508,9 @@
 		B10000000000000000000011 /* MoneyManagerModel.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				B10000000000000000000046 /* MoneyManagerModel.xcdatamodel */,
 			);
+			currentVersion = B10000000000000000000046 /* MoneyManagerModel.xcdatamodel */;
 			path = MoneyManagerModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

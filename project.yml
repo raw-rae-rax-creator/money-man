@@ -29,7 +29,6 @@ targets:
           - "**/*.md"
     resources:
       - path: MoneyManager/Assets.xcassets
-      - path: MoneyManager/MoneyManagerModel.xcdatamodeld
     info:
       path: MoneyManager/Info.plist
     settings:
