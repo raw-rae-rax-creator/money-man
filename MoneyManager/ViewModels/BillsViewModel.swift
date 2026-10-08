@@ -21,8 +21,9 @@ class BillsViewModel: ObservableObject {
     @Published var subscriptionCycle: BillingCycle = .monthly
     @Published var subscriptionNextDate: Date = Date()
 
-    private let billsKey = "bills"
-    private let subscriptionsKey = "subscriptions"
+    private let billsKey = ImportExportService.billsKey
+    private let subscriptionsKey = ImportExportService.subscriptionsKey
+    private let notifications = NotificationService.shared
 
     func loadData() {
         isLoading = true
@@ -35,8 +36,35 @@ class BillsViewModel: ObservableObject {
 
         if let data = UserDefaults.standard.data(forKey: subscriptionsKey),
            let decoded = try? JSONDecoder().decode([Subscription].self, from: data) {
-            subscriptions = decoded.sorted { $0.nextBillingDate < $1.nextBillingDate }
+            subscriptions = decoded
         }
+
+        rollSubscriptionsForward()
+        subscriptions.sort { $0.nextBillingDate < $1.nextBillingDate }
+    }
+
+    /// Moves past billing dates to the next upcoming one.
+    private func rollSubscriptionsForward() {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        var changed = false
+
+        for index in subscriptions.indices {
+            let step = subscriptions[index].billingCycle.dateComponent
+            var next = subscriptions[index].nextBillingDate
+            var iterations = 0
+            while calendar.startOfDay(for: next) < today && iterations < 1000 {
+                guard let advanced = calendar.date(byAdding: step, to: next) else { break }
+                next = advanced
+                iterations += 1
+            }
+            if next != subscriptions[index].nextBillingDate {
+                subscriptions[index].nextBillingDate = next
+                changed = true
+            }
+        }
+
+        if changed { saveData() }
     }
 
     func saveData() {
@@ -48,12 +76,21 @@ class BillsViewModel: ObservableObject {
         }
     }
 
+    var isBillFormValid: Bool {
+        guard let amount = AppCurrency.parseAmount(billAmount), amount > 0 else { return false }
+        return !billName.trimmed.isEmpty
+    }
+
+    var isSubscriptionFormValid: Bool {
+        guard let amount = AppCurrency.parseAmount(subscriptionAmount), amount > 0 else { return false }
+        return !subscriptionName.trimmed.isEmpty
+    }
+
     func addBill() {
-        guard let amount = Double(billAmount), amount > 0 else { return }
-        guard !billName.isEmpty else { return }
+        guard isBillFormValid, let amount = AppCurrency.parseAmount(billAmount) else { return }
 
         let bill = Bill(
-            name: billName,
+            name: billName.trimmed,
             amount: amount,
             dueDate: billDueDate,
             recurringFrequency: billIsRecurring ? billFrequency : nil,
@@ -62,35 +99,54 @@ class BillsViewModel: ObservableObject {
         )
 
         bills.append(bill)
+        bills.sort { $0.dueDate < $1.dueDate }
         saveData()
+        notifications.scheduleBillReminder(for: bill)
+        Haptics.success()
         resetBillForm()
     }
 
     func addSubscription() {
-        guard let amount = Double(subscriptionAmount), amount > 0 else { return }
-        guard !subscriptionName.isEmpty else { return }
+        guard isSubscriptionFormValid, let amount = AppCurrency.parseAmount(subscriptionAmount) else { return }
 
         let subscription = Subscription(
-            name: subscriptionName,
+            name: subscriptionName.trimmed,
             amount: amount,
             billingCycle: subscriptionCycle,
             nextBillingDate: subscriptionNextDate
         )
 
         subscriptions.append(subscription)
+        rollSubscriptionsForward()
+        subscriptions.sort { $0.nextBillingDate < $1.nextBillingDate }
         saveData()
+        Haptics.success()
         resetSubscriptionForm()
     }
 
     func markBillAsPaid(_ bill: Bill) {
         guard let index = bills.firstIndex(where: { $0.id == bill.id }) else { return }
-        bills[index].isPaid = true
+
+        // A recurring bill moves to its next due date instead of disappearing.
+        if bill.isRecurring,
+           let frequency = bill.recurringFrequency,
+           let nextDate = Calendar.current.date(byAdding: frequency.dateComponent, to: bill.dueDate) {
+            bills[index].dueDate = nextDate
+            bills[index].isPaid = false
+            notifications.scheduleBillReminder(for: bills[index])
+        } else {
+            bills[index].isPaid = true
+            notifications.cancelBillReminder(id: bill.id)
+        }
+        bills.sort { $0.dueDate < $1.dueDate }
         saveData()
+        Haptics.success()
     }
 
     func deleteBill(_ bill: Bill) {
         bills.removeAll { $0.id == bill.id }
         saveData()
+        notifications.cancelBillReminder(id: bill.id)
     }
 
     func deleteSubscription(_ subscription: Subscription) {
@@ -98,7 +154,7 @@ class BillsViewModel: ObservableObject {
         saveData()
     }
 
-    private func resetBillForm() {
+    func resetBillForm() {
         billName = ""
         billAmount = ""
         billDueDate = Date()
@@ -108,7 +164,7 @@ class BillsViewModel: ObservableObject {
         showAddBillSheet = false
     }
 
-    private func resetSubscriptionForm() {
+    func resetSubscriptionForm() {
         subscriptionName = ""
         subscriptionAmount = ""
         subscriptionCycle = .monthly
@@ -117,7 +173,7 @@ class BillsViewModel: ObservableObject {
     }
 
     var upcomingBills: [Bill] {
-        bills.filter { !$0.isPaid && $0.daysUntilDue >= 0 }.prefix(5).map { $0 }
+        bills.filter { !$0.isPaid && !$0.isOverdue }
     }
 
     var overdueBills: [Bill] {
@@ -133,10 +189,7 @@ class BillsViewModel: ObservableObject {
     }
 
     var totalDueThisMonth: Double {
-        let calendar = Calendar.current
-        let now = Date()
-        let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: now.startOfMonth())!
-
-        return bills.filter { !$0.isPaid && $0.dueDate <= endOfMonth }.reduce(0) { $0 + $1.amount }
+        let endOfMonth = Date().interval(of: .month).end
+        return bills.filter { !$0.isPaid && $0.dueDate < endOfMonth }.reduce(0) { $0 + $1.amount }
     }
 }

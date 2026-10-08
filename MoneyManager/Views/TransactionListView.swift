@@ -3,6 +3,7 @@ import SwiftUI
 struct TransactionListView: View {
     @StateObject private var viewModel = TransactionListViewModel()
     @State private var showAddTransaction = false
+    @State private var editingTransaction: Transaction?
 
     var body: some View {
         NavigationView {
@@ -16,8 +17,21 @@ struct TransactionListView: View {
                     transactionList
                 }
             }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("Transactions")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Menu {
+                        Picker("Date Range", selection: $viewModel.dateRange) {
+                            ForEach(TransactionListViewModel.DateRange.allCases, id: \.self) { range in
+                                Text(range.rawValue).tag(range)
+                            }
+                        }
+                    } label: {
+                        Label(viewModel.dateRange.rawValue, systemImage: "calendar")
+                    }
+                }
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showAddTransaction = true }) {
                         Image(systemName: "plus.circle.fill")
@@ -25,20 +39,23 @@ struct TransactionListView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showAddTransaction) {
+            .sheet(isPresented: $showAddTransaction, onDismiss: reload) {
                 AddTransactionView()
             }
+            .sheet(item: $editingTransaction, onDismiss: reload) { transaction in
+                AddTransactionView(editing: transaction)
+            }
         }
-        .task {
-            await viewModel.loadTransactions()
-        }
-        .refreshable {
-            await viewModel.loadTransactions()
-        }
+        .navigationViewStyle(.stack)
+        .onAppear(perform: reload)
+    }
+
+    private func reload() {
+        Task { await viewModel.loadTransactions() }
     }
 
     private var filterBar: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             Picker("Filter", selection: $viewModel.selectedFilter) {
                 ForEach(TransactionListViewModel.TransactionFilter.allCases, id: \.self) { filter in
                     Text(filter.rawValue).tag(filter)
@@ -46,109 +63,124 @@ struct TransactionListView: View {
             }
             .pickerStyle(.segmented)
 
-            Picker("Date Range", selection: $viewModel.dateRange) {
-                ForEach(TransactionListViewModel.DateRange.allCases, id: \.self) { range in
-                    Text(range.rawValue).tag(range)
-                }
-            }
-            .pickerStyle(.menu)
-
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField("Search transactions...", text: $viewModel.searchText)
+                TextField("Search notes, tags, categories", text: $viewModel.searchText)
+                    .disableAutocorrection(true)
+                if !viewModel.searchText.isEmpty {
+                    Button {
+                        viewModel.searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
-            .padding(12)
-            .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .padding(10)
+            .background(Color(.tertiarySystemFill))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.top, 8)
         .onChange(of: viewModel.selectedFilter) { _ in viewModel.applyFilters() }
         .onChange(of: viewModel.searchText) { _ in viewModel.applyFilters() }
-        .onChange(of: viewModel.dateRange) { _ in
-            Task { await viewModel.loadTransactions() }
-        }
+        .onChange(of: viewModel.dateRange) { _ in reload() }
     }
 
     private var summaryBar: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Income")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Text(formatCurrency(viewModel.getTotalIncome()))
-                    .font(.subheadline.bold())
-                    .foregroundColor(.green)
-            }
-
+            summaryItem("Income", viewModel.getTotalIncome(), .green, alignment: .leading)
             Spacer()
-
-            VStack(alignment: .center, spacing: 4) {
-                Text("Net")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Text(formatCurrency(viewModel.getNetAmount()))
-                    .font(.subheadline.bold())
-                    .foregroundColor(viewModel.getNetAmount() >= 0 ? .green : .red)
-            }
-
+            summaryItem("Net", viewModel.getNetAmount(), viewModel.getNetAmount() >= 0 ? .green : .red, alignment: .center)
             Spacer()
-
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("Expenses")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                Text(formatCurrency(viewModel.getTotalExpenses()))
-                    .font(.subheadline.bold())
-                    .foregroundColor(.red)
-            }
+            summaryItem("Expenses", viewModel.getTotalExpenses(), .red, alignment: .trailing)
         }
         .padding()
-        .background(Color(.systemBackground))
-        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+
+    private func summaryItem(_ title: String, _ amount: Double, _ color: Color, alignment: HorizontalAlignment) -> some View {
+        VStack(alignment: alignment, spacing: 4) {
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            Text(amount.formattedAsCurrency())
+                .font(.subheadline.weight(.semibold).monospacedDigit())
+                .foregroundColor(color)
+        }
     }
 
     private var transactionList: some View {
         List {
-            ForEach(viewModel.filteredTransactions) { transaction in
-                TransactionRowView(transaction: transaction)
-            }
-            .onDelete { offsets in
-                Task {
-                    await viewModel.deleteTransaction(at: offsets)
+            ForEach(viewModel.groupedTransactions, id: \.day) { group in
+                Section {
+                    ForEach(group.items) { transaction in
+                        TransactionRowView(
+                            transaction: transaction,
+                            category: viewModel.categoriesById[transaction.categoryId],
+                            account: viewModel.accountsById[transaction.accountId]
+                        )
+                        .onTapGesture {
+                            editingTransaction = transaction
+                        }
+                        .swipeActions {
+                            Button(role: .destructive) {
+                                Task { await viewModel.deleteTransaction(transaction) }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    }
+                } header: {
+                    dayHeader(group.day, items: group.items)
                 }
             }
         }
-        .listStyle(.plain)
+        .listStyle(.insetGrouped)
+        .refreshable {
+            await viewModel.loadTransactions()
+        }
+    }
+
+    private func dayHeader(_ day: Date, items: [Transaction]) -> some View {
+        let net = items.reduce(0.0) { total, transaction in
+            switch transaction.type {
+            case .income: return total + transaction.amount
+            case .expense: return total - transaction.amount
+            case .transfer: return total
+            }
+        }
+        return HStack {
+            Text(dayTitle(day))
+            Spacer()
+            Text(net.formattedAsCurrency())
+                .monospacedDigit()
+        }
+    }
+
+    private func dayTitle(_ day: Date) -> String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(day) { return "Today" }
+        if calendar.isDateInYesterday(day) { return "Yesterday" }
+        return day.formatted(.dateTime.weekday(.wide).day().month(.wide))
     }
 
     private var emptyState: some View {
         VStack(spacing: 16) {
             Image(systemName: "tray")
-                .font(.system(size: 60))
+                .font(.system(size: 56))
                 .foregroundColor(.secondary)
 
             Text("No transactions found")
                 .font(.headline)
                 .foregroundColor(.secondary)
 
-            Button(action: { showAddTransaction = true }) {
-                Text("Add Transaction")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(Color.blue)
-                    .cornerRadius(12)
+            Button("Add Transaction") {
+                showAddTransaction = true
             }
+            .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
     }
 }
 

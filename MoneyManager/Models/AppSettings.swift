@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 struct AppSettings: Codable {
     var currency: String
@@ -24,10 +24,36 @@ struct AppSettings: Codable {
         self.dateFormat = "MM/dd/yyyy"
         self.notificationEnabled = true
     }
+
+    static let storageKey = "appSettings"
+
+    static func load() -> AppSettings {
+        guard let data = UserDefaults.standard.data(forKey: storageKey),
+              let settings = try? JSONDecoder().decode(AppSettings.self, from: data) else {
+            return AppSettings()
+        }
+        return settings
+    }
+
+    func save() {
+        if let encoded = try? JSONEncoder().encode(self) {
+            UserDefaults.standard.set(encoded, forKey: AppSettings.storageKey)
+        }
+    }
 }
 
 enum AppTheme: String, Codable, CaseIterable {
     case light = "light"
     case dark = "dark"
     case system = "system"
+
+    static let storageKey = "appTheme"
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .light: return .light
+        case .dark: return .dark
+        case .system: return nil
+        }
+    }
 }

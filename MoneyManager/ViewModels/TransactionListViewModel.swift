@@ -10,6 +10,8 @@ class TransactionListViewModel: ObservableObject {
     @Published var selectedCategory: Category?
     @Published var dateRange: DateRange = .thisMonth
     @Published var isLoading: Bool = false
+    @Published var categoriesById: [UUID: Category] = [:]
+    @Published var accountsById: [UUID: Account] = [:]
 
     private let database = DatabaseService.shared
 
@@ -34,6 +36,10 @@ class TransactionListViewModel: ObservableObject {
         do {
             let (from, to) = getDateRange()
             transactions = try database.fetchTransactions(from: from, to: to)
+            let categories = try database.fetchCategories()
+            let accounts = try database.fetchAccounts()
+            categoriesById = Dictionary(categories.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+            accountsById = Dictionary(accounts.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
             applyFilters()
         } catch {
             print("Error loading transactions: \(error)")
@@ -52,12 +58,32 @@ class TransactionListViewModel: ObservableObject {
             filteredTransactions = filteredTransactions.filter { $0.categoryId == category.id }
         }
 
-        if !searchText.isEmpty {
-            filteredTransactions = filteredTransactions.filter {
-                $0.note.localizedCaseInsensitiveContains(searchText) ||
-                $0.tags.contains { $0.localizedCaseInsensitiveContains(searchText) }
+        let query = searchText.trimmed
+        if !query.isEmpty {
+            filteredTransactions = filteredTransactions.filter { transaction in
+                transaction.note.localizedCaseInsensitiveContains(query) ||
+                transaction.tags.contains { $0.localizedCaseInsensitiveContains(query) } ||
+                (categoriesById[transaction.categoryId]?.name.localizedCaseInsensitiveContains(query) ?? false)
             }
         }
+    }
+
+    /// Transactions grouped by calendar day, newest first.
+    var groupedTransactions: [(day: Date, items: [Transaction])] {
+        let calendar = Calendar.current
+        let groups = Dictionary(grouping: filteredTransactions) { calendar.startOfDay(for: $0.date) }
+        return groups
+            .map { (day: $0.key, items: $0.value) }
+            .sorted { $0.day > $1.day }
+    }
+
+    func deleteTransaction(_ transaction: Transaction) async {
+        do {
+            try database.deleteTransaction(id: transaction.id)
+        } catch {
+            print("Error deleting transaction: \(error)")
+        }
+        await loadTransactions()
     }
 
     func deleteTransaction(at offsets: IndexSet) async {
@@ -73,23 +99,21 @@ class TransactionListViewModel: ObservableObject {
     }
 
     private func getDateRange() -> (Date?, Date?) {
-        let calendar = Calendar.current
         let now = Date()
 
         switch dateRange {
         case .today:
-            let start = calendar.startOfDay(for: now)
-            let end = calendar.date(byAdding: .day, value: 1, to: start)!
-            return (start, end)
+            let day = now.interval(of: .day)
+            return (day.start, day.end)
         case .thisWeek:
-            let start = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
-            return (start, now)
+            let week = now.interval(of: .weekOfYear)
+            return (week.start, week.end)
         case .thisMonth:
-            let start = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
-            return (start, now)
+            let month = now.interval(of: .month)
+            return (month.start, month.end)
         case .thisYear:
-            let start = calendar.date(from: calendar.dateComponents([.year], from: now))!
-            return (start, now)
+            let year = now.interval(of: .year)
+            return (year.start, year.end)
         case .all:
             return (nil, nil)
         }

@@ -1,21 +1,30 @@
 import SwiftUI
 
 struct DashboardView: View {
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = DashboardViewModel()
     @State private var showAddTransaction = false
+    @State private var editingTransaction: Transaction?
 
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: 16) {
                     balanceCard
-                    monthlySummaryCard
+                    if viewModel.accounts.count > 1 {
+                        accountsStrip
+                    }
+                    debtsCard
                     recentTransactionsSection
                     categoryBreakdownSection
                 }
                 .padding()
             }
-            .navigationTitle("Dashboard")
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
+            .refreshable {
+                await viewModel.loadData()
+            }
+            .navigationTitle("Overview")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showAddTransaction = true }) {
@@ -24,94 +33,154 @@ struct DashboardView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showAddTransaction) {
+            .sheet(isPresented: $showAddTransaction, onDismiss: reload) {
                 AddTransactionView()
             }
+            .sheet(item: $editingTransaction, onDismiss: reload) { transaction in
+                AddTransactionView(editing: transaction)
+            }
         }
-        .task {
-            await viewModel.loadData()
-        }
-        .refreshable {
-            await viewModel.loadData()
-        }
+        .navigationViewStyle(.stack)
+        // onAppear (not .task) so the data refreshes every time the tab is opened.
+        .onAppear(perform: reload)
+    }
+
+    private func reload() {
+        Task { await viewModel.loadData() }
     }
 
     private var balanceCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Total Balance")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(.white.opacity(0.85))
 
-            Text(formatCurrency(viewModel.totalBalance))
-                .font(.system(size: 42, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
+            Text(viewModel.totalBalance.formattedAsCurrency())
+                .font(.system(size: 38, weight: .bold, design: .rounded))
+                .foregroundColor(.white)
+                .minimumScaleFactor(0.5)
+                .lineLimit(1)
 
-            HStack(spacing: 20) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.down.circle.fill")
-                            .foregroundColor(.green)
-                        Text("Income")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Text(formatCurrency(viewModel.monthlyIncome))
-                        .font(.headline)
-                        .foregroundColor(.green)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .foregroundColor(.red)
-                        Text("Expenses")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    Text(formatCurrency(viewModel.monthlyExpenses))
-                        .font(.headline)
-                        .foregroundColor(.red)
-                }
-            }
-            .padding(.top, 8)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-        )
-    }
-
-    private var monthlySummaryCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Monthly Summary")
-                    .font(.headline)
-                Spacer()
-                Text(Date(), format: .dateTime.month(.wide).year())
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            HStack(spacing: 24) {
+                summaryItem(
+                    title: "Income",
+                    amount: viewModel.monthlyIncome,
+                    icon: "arrow.down.circle.fill"
+                )
+                summaryItem(
+                    title: "Expenses",
+                    amount: viewModel.monthlyExpenses,
+                    icon: "arrow.up.circle.fill"
+                )
             }
 
             let netAmount = viewModel.monthlyIncome - viewModel.monthlyExpenses
             HStack {
-                Text("Net")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                Text(Date(), format: .dateTime.month(.wide).year())
                 Spacer()
-                Text(formatCurrency(netAmount))
-                    .font(.title3.bold())
-                    .foregroundColor(netAmount >= 0 ? .green : .red)
+                Text("Net \(netAmount >= 0 ? "+" : "")\(netAmount.formattedAsCurrency())")
+                    .fontWeight(.semibold)
             }
+            .font(.caption)
+            .foregroundColor(.white.opacity(0.85))
         }
         .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+            LinearGradient(
+                colors: [Color.accentColor, Color.accentColor.opacity(0.7)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         )
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private func summaryItem(title: String, amount: Double, icon: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label(title, systemImage: icon)
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.85))
+            Text(amount.formattedAsCurrency())
+                .font(.headline.monospacedDigit())
+                .foregroundColor(.white)
+        }
+    }
+
+    private var accountsStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(viewModel.accounts) { account in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Image(systemName: account.icon)
+                            .foregroundColor(Color(hex: account.color))
+                        Text(account.name)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                        Text(account.balance.formattedAsCurrency())
+                            .font(.subheadline.weight(.semibold).monospacedDigit())
+                    }
+                    .padding(12)
+                    .frame(minWidth: 120, alignment: .leading)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+            }
+        }
+    }
+
+    private var debtsCard: some View {
+        Button {
+            selectedTab = .debts
+        } label: {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Label("Debts", systemImage: "person.2.fill")
+                        .font(.headline)
+                    Spacer()
+                    if viewModel.overdueDebtsCount > 0 {
+                        Text("\(viewModel.overdueDebtsCount) overdue")
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(.red)
+                    }
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundColor(Color(.tertiaryLabel))
+                }
+
+                if viewModel.activeDebtsCount == 0 {
+                    Text("No active debts")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                } else {
+                    HStack(spacing: 24) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Owed to me")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(viewModel.owedToMe.formattedAsCurrency())
+                                .font(.headline.monospacedDigit())
+                                .foregroundColor(.orange)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("I owe")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(viewModel.iOwe.formattedAsCurrency())
+                                .font(.headline.monospacedDigit())
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+
+                Text("Not included in balance or statistics")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .cardStyle()
+        }
+        .buttonStyle(.plain)
     }
 
     private var recentTransactionsSection: some View {
@@ -120,35 +189,42 @@ struct DashboardView: View {
                 Text("Recent Transactions")
                     .font(.headline)
                 Spacer()
-                NavigationLink(destination: TransactionListView()) {
-                    Text("See All")
-                        .font(.subheadline)
-                        .foregroundColor(.blue)
+                Button("See All") {
+                    selectedTab = .transactions
                 }
+                .font(.subheadline)
             }
 
             if viewModel.recentTransactions.isEmpty {
-                Text("No transactions yet")
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding()
+                VStack(spacing: 12) {
+                    Text("No transactions yet")
+                        .foregroundColor(.secondary)
+                    Button("Add your first transaction") {
+                        showAddTransaction = true
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
             } else {
                 ForEach(viewModel.recentTransactions.prefix(5)) { transaction in
-                    TransactionRowView(transaction: transaction)
+                    TransactionRowView(
+                        transaction: transaction,
+                        category: viewModel.categoriesById[transaction.categoryId],
+                        account: viewModel.accountsById[transaction.accountId]
+                    )
+                    .onTapGesture {
+                        editingTransaction = transaction
+                    }
                 }
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-        )
+        .cardStyle()
     }
 
     private var categoryBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Top Categories")
+            Text("Top Categories This Month")
                 .font(.headline)
 
             if viewModel.categoryBreakdown.isEmpty {
@@ -158,45 +234,36 @@ struct DashboardView: View {
                     .padding()
             } else {
                 ForEach(viewModel.categoryBreakdown.prefix(5), id: \.category.id) { item in
-                    HStack {
-                        Image(systemName: item.category.icon)
-                            .foregroundColor(Color(hex: item.category.color))
-                            .frame(width: 32)
+                    VStack(spacing: 6) {
+                        HStack {
+                            Image(systemName: item.category.icon)
+                                .foregroundColor(Color(hex: item.category.color))
+                                .frame(width: 28)
 
-                        VStack(alignment: .leading, spacing: 2) {
                             Text(item.category.name)
                                 .font(.subheadline)
-                            Text("\(Int(item.percentage))%")
+
+                            Spacer()
+
+                            Text(item.amount.formattedAsCurrency())
+                                .font(.subheadline.weight(.semibold).monospacedDigit())
+                            Text("\(Int(item.percentage.rounded()))%")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
+                                .frame(width: 40, alignment: .trailing)
                         }
 
-                        Spacer()
-
-                        Text(formatCurrency(item.amount))
-                            .font(.subheadline.bold())
-                            .foregroundColor(.red)
+                        ProgressView(value: min(item.percentage, 100), total: 100)
+                            .tint(Color(hex: item.category.color))
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 2)
                 }
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-        )
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
+        .cardStyle()
     }
 }
 
 #Preview {
-    DashboardView()
+    DashboardView(selectedTab: .constant(.dashboard))
 }

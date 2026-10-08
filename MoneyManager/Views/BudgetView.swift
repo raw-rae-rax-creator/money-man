@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// Pushed from the "More" tab, so it relies on the parent NavigationView.
 struct BudgetView: View {
     @StateObject private var viewModel = BudgetViewModel()
     @State private var categories: [Category] = []
@@ -7,30 +8,33 @@ struct BudgetView: View {
     private let database = DatabaseService.shared
 
     var body: some View {
-        NavigationView {
-            List {
-                if viewModel.budgetSummaries.isEmpty {
-                    emptyState
-                } else {
-                    budgetList
-                }
-            }
-            .navigationTitle("Budgets")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { viewModel.showAddSheet = true }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                    }
-                }
-            }
-            .sheet(isPresented: $viewModel.showAddSheet) {
-                BudgetFormView(viewModel: viewModel, categories: categories)
+        List {
+            if viewModel.budgetSummaries.isEmpty {
+                emptyState
+            } else {
+                budgetList
             }
         }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Budgets")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    viewModel.resetForm()
+                    viewModel.showAddSheet = true
+                }) {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $viewModel.showAddSheet) {
+            BudgetFormView(viewModel: viewModel, categories: categories)
+        }
         .task {
-            await viewModel.loadBudgets()
-            await loadCategories()
+            loadCategories()
+        }
+        .onAppear {
+            Task { await viewModel.loadBudgets() }
         }
         .refreshable {
             await viewModel.loadBudgets()
@@ -41,7 +45,7 @@ struct BudgetView: View {
         Section {
             VStack(spacing: 16) {
                 Image(systemName: "chart.bar.fill")
-                    .font(.system(size: 60))
+                    .font(.system(size: 56))
                     .foregroundColor(.secondary)
 
                 Text("No budgets yet")
@@ -53,14 +57,11 @@ struct BudgetView: View {
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
 
-                Button(action: { viewModel.showAddSheet = true }) {
-                    Text("Create Budget")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(12)
+                Button("Create Budget") {
+                    viewModel.resetForm()
+                    viewModel.showAddSheet = true
                 }
+                .buttonStyle(.borderedProminent)
             }
             .frame(maxWidth: .infinity)
             .padding()
@@ -68,7 +69,7 @@ struct BudgetView: View {
     }
 
     private var budgetList: some View {
-        Section("Monthly Budgets") {
+        Section {
             ForEach(viewModel.budgetSummaries) { summary in
                 BudgetRowView(summary: summary)
                     .swipeActions {
@@ -84,7 +85,7 @@ struct BudgetView: View {
         }
     }
 
-    private func loadCategories() async {
+    private func loadCategories() {
         do {
             categories = try database.fetchCategories(type: .expense)
         } catch {
@@ -97,24 +98,36 @@ struct BudgetRowView: View {
     let summary: BudgetSummary
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 if let category = summary.category {
                     Image(systemName: category.icon)
                         .foregroundColor(Color(hex: category.color))
-                        .font(.title2)
+                        .font(.title3)
 
                     Text(category.name)
                         .font(.headline)
                 } else {
-                    Text("Total Budget")
+                    Image(systemName: "sum")
+                        .foregroundColor(.accentColor)
+                        .font(.title3)
+
+                    Text("All Expenses")
                         .font(.headline)
                 }
 
+                Text(summary.budget.period.rawValue.capitalized)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color(.tertiarySystemFill))
+                    .clipShape(Capsule())
+
                 Spacer()
 
-                Text(formatCurrency(summary.budget.amount))
-                    .font(.headline)
+                Text(summary.budget.amount.formattedAsCurrency())
+                    .font(.headline.monospacedDigit())
             }
 
             ProgressView(value: min(summary.percentage, 100), total: 100)
@@ -126,28 +139,30 @@ struct BudgetRowView: View {
                     Text("Spent")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text(formatCurrency(summary.spent))
-                        .font(.caption.bold())
+                    Text(summary.spent.formattedAsCurrency())
+                        .font(.caption.bold().monospacedDigit())
                         .foregroundColor(.red)
                 }
 
                 Spacer()
 
+                Text("\(Int(summary.percentage))% used")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("Remaining")
+                    Text(summary.remaining >= 0 ? "Remaining" : "Over budget")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text(formatCurrency(summary.remaining))
-                        .font(.caption.bold())
+                    Text(abs(summary.remaining).formattedAsCurrency())
+                        .font(.caption.bold().monospacedDigit())
                         .foregroundColor(summary.remaining >= 0 ? .green : .red)
                 }
             }
-
-            Text("\(Int(summary.percentage))% used")
-                .font(.caption2)
-                .foregroundColor(.secondary)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
     }
 
     private var progressColor: Color {
@@ -158,13 +173,6 @@ struct BudgetRowView: View {
         } else {
             return .green
         }
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
     }
 }
 
@@ -178,7 +186,7 @@ struct BudgetFormView: View {
             Form {
                 Section("Category") {
                     Picker("Category", selection: $viewModel.selectedCategory) {
-                        Text("Total Budget").tag(nil as Category?)
+                        Text("All Expenses").tag(nil as Category?)
                         ForEach(categories) { category in
                             Text(category.name).tag(Optional(category))
                         }
@@ -186,14 +194,14 @@ struct BudgetFormView: View {
                     .pickerStyle(.menu)
                 }
 
-                Section("Budget Amount") {
+                Section("Limit") {
                     HStack {
-                        Text("$")
-                            .font(.title2)
-                            .foregroundColor(.secondary)
-                        TextField("0.00", text: $viewModel.budgetAmount)
+                        TextField("0", text: $viewModel.budgetAmount)
                             .keyboardType(.decimalPad)
                             .font(.title2)
+                        Text(AppCurrency.symbol)
+                            .font(.title2)
+                            .foregroundColor(.secondary)
                     }
                 }
 
@@ -209,19 +217,21 @@ struct BudgetFormView: View {
             .navigationTitle("New Budget")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         Task {
                             await viewModel.addBudget()
                             dismiss()
                         }
                     }
+                    .font(.body.weight(.semibold))
+                    .disabled(!viewModel.isFormValid)
                 }
             }
         }
@@ -229,5 +239,7 @@ struct BudgetFormView: View {
 }
 
 #Preview {
-    BudgetView()
+    NavigationView {
+        BudgetView()
+    }
 }

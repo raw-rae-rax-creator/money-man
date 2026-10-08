@@ -29,6 +29,23 @@ class SecurityService {
         return false
     }
 
+    /// Face ID / Touch ID with the device passcode as a fallback, so the user can't get locked out.
+    func authenticateDeviceOwner(reason: String = "Unlock Money Manager") async -> Bool {
+        let context = LAContext()
+        var error: NSError?
+
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+            return false
+        }
+
+        do {
+            return try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason)
+        } catch {
+            print("Device owner authentication failed: \(error.localizedDescription)")
+            return false
+        }
+    }
+
     func isBiometricAvailable() -> Bool {
         let context = LAContext()
         var error: NSError?

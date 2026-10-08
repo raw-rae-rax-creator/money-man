@@ -7,6 +7,8 @@
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Face ID is used to unlock Money Manager and protect your financial data.</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>UILaunchScreen</key>

@@ -1,8 +1,18 @@
 import SwiftUI
 
 struct AddTransactionView: View {
-    @StateObject private var viewModel = AddTransactionViewModel()
+    @StateObject private var viewModel: AddTransactionViewModel
+    @StateObject private var categoryViewModel = CategoryViewModel()
+    @StateObject private var accountViewModel = AccountViewModel()
     @Environment(\.dismiss) var dismiss
+    @FocusState private var amountFocused: Bool
+    @State private var showNewCategory = false
+    @State private var showNewAccount = false
+    @State private var showDeleteConfirmation = false
+
+    init(editing transaction: Transaction? = nil) {
+        _viewModel = StateObject(wrappedValue: AddTransactionViewModel(editing: transaction))
+    }
 
     var body: some View {
         NavigationView {
@@ -14,26 +24,37 @@ struct AddTransactionView: View {
                 detailsSection
                 tagsSection
                 recurringSection
+                if viewModel.isEditing {
+                    deleteSection
+                }
             }
-            .navigationTitle("New Transaction")
+            .navigationTitle(viewModel.isEditing ? "Edit Transaction" : "New Transaction")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         Task {
-                            let success = await viewModel.save()
-                            if success {
+                            if await viewModel.save() {
                                 dismiss()
                             }
                         }
                     }
+                    .font(.body.weight(.semibold))
                     .disabled(viewModel.isSaving)
+                }
+
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        amountFocused = false
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
                 }
             }
             .alert("Error", isPresented: $viewModel.showError) {
@@ -41,9 +62,35 @@ struct AddTransactionView: View {
             } message: {
                 Text(viewModel.errorMessage)
             }
+            .confirmationDialog("Delete this transaction?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
+                Button("Delete", role: .destructive) {
+                    Task {
+                        if await viewModel.delete() {
+                            dismiss()
+                        }
+                    }
+                }
+            } message: {
+                Text("The account balance will be adjusted.")
+            }
+            .sheet(isPresented: $showNewCategory) {
+                CategoryFormView(viewModel: categoryViewModel) { category in
+                    viewModel.selectedCategory = category
+                    Task { await viewModel.loadData() }
+                }
+            }
+            .sheet(isPresented: $showNewAccount) {
+                AccountFormView(viewModel: accountViewModel) { account in
+                    viewModel.selectedAccount = account
+                    Task { await viewModel.loadData() }
+                }
+            }
         }
         .task {
             await viewModel.loadData()
+            if !viewModel.isEditing {
+                amountFocused = true
+            }
         }
     }
 
@@ -63,35 +110,38 @@ struct AddTransactionView: View {
     private var amountSection: some View {
         Section("Amount") {
             HStack {
-                Text("$")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                TextField("0.00", text: $viewModel.amount)
+                TextField("0", text: $viewModel.amount)
                     .keyboardType(.decimalPad)
-                    .font(.title2)
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .foregroundColor(viewModel.type == .income ? .green : .primary)
+                    .focused($amountFocused)
+                Text(AppCurrency.symbol)
+                    .font(.title)
+                    .foregroundColor(.secondary)
             }
         }
     }
 
     private var categorySection: some View {
         Section("Category") {
-            if viewModel.categories.isEmpty {
-                Text("No categories available")
-                    .foregroundColor(.secondary)
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(viewModel.categories) { category in
-                            CategoryChip(
-                                category: category,
-                                isSelected: viewModel.selectedCategory?.id == category.id
-                            ) {
-                                viewModel.selectedCategory = category
-                            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: 12) {
+                    ForEach(viewModel.categories) { category in
+                        CategoryChip(
+                            category: category,
+                            isSelected: viewModel.selectedCategory?.id == category.id
+                        ) {
+                            Haptics.tap()
+                            viewModel.selectedCategory = category
                         }
                     }
-                    .padding(.vertical, 4)
+
+                    NewItemChip(title: "New") {
+                        categoryViewModel.prepareNew(type: viewModel.type == .income ? .income : .expense)
+                        showNewCategory = true
+                    }
                 }
+                .padding(.vertical, 4)
             }
         }
     }
@@ -99,15 +149,28 @@ struct AddTransactionView: View {
     private var accountSection: some View {
         Section("Account") {
             if viewModel.accounts.isEmpty {
-                Text("No accounts available")
-                    .foregroundColor(.secondary)
+                Button {
+                    accountViewModel.prepareNew()
+                    showNewAccount = true
+                } label: {
+                    Label("Create an account", systemImage: "plus.circle.fill")
+                }
             } else {
                 Picker("Account", selection: $viewModel.selectedAccount) {
                     ForEach(viewModel.accounts) { account in
-                        Text(account.name).tag(account)
+                        Label(account.name, systemImage: account.icon)
+                            .tag(Optional(account))
                     }
                 }
                 .pickerStyle(.menu)
+
+                Button {
+                    accountViewModel.prepareNew()
+                    showNewAccount = true
+                } label: {
+                    Label("New account", systemImage: "plus")
+                        .font(.subheadline)
+                }
             }
         }
     }
@@ -129,8 +192,8 @@ struct AddTransactionView: View {
                     }
                 Button(action: { viewModel.addTag() }) {
                     Image(systemName: "plus.circle.fill")
-                        .foregroundColor(.blue)
                 }
+                .disabled(viewModel.newTag.trimmed.isEmpty)
             }
 
             if !viewModel.tags.isEmpty {
@@ -138,17 +201,18 @@ struct AddTransactionView: View {
                     HStack(spacing: 8) {
                         ForEach(viewModel.tags, id: \.self) { tag in
                             HStack(spacing: 4) {
-                                Text(tag)
+                                Text("#\(tag)")
                                     .font(.caption)
                                 Button(action: { viewModel.removeTag(tag) }) {
                                     Image(systemName: "xmark.circle.fill")
                                         .font(.caption)
                                 }
+                                .buttonStyle(.plain)
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
+                            .background(Color.accentColor.opacity(0.12))
+                            .clipShape(Capsule())
                         }
                     }
                 }
@@ -170,6 +234,16 @@ struct AddTransactionView: View {
             }
         }
     }
+
+    private var deleteSection: some View {
+        Section {
+            Button(role: .destructive) {
+                showDeleteConfirmation = true
+            } label: {
+                Label("Delete Transaction", systemImage: "trash")
+            }
+        }
+    }
 }
 
 struct CategoryChip: View {
@@ -179,22 +253,19 @@ struct CategoryChip: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 Image(systemName: category.icon)
-                    .font(.title2)
-                    .foregroundColor(Color(hex: category.color))
+                    .font(.title3)
+                    .foregroundColor(isSelected ? .white : Color(hex: category.color))
                     .frame(width: 50, height: 50)
-                    .background(Color(hex: category.color).opacity(isSelected ? 0.2 : 0.1))
+                    .background(isSelected ? Color(hex: category.color) : Color(hex: category.color).opacity(0.15))
                     .clipShape(Circle())
-                    .overlay(
-                        Circle()
-                            .stroke(isSelected ? Color(hex: category.color) : .clear, lineWidth: 2)
-                    )
 
                 Text(category.name)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundColor(isSelected ? .primary : .secondary)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
             }
             .frame(width: 70)
         }
@@ -202,18 +273,29 @@ struct CategoryChip: View {
     }
 }
 
-struct FlowLayout: View {
-    let spacing: CGFloat = 8
-    let content: () -> AnyView
-
-    init<Content: View>(@ViewBuilder content: @escaping () -> Content) {
-        self.content = { AnyView(content()) }
-    }
+struct NewItemChip: View {
+    let title: String
+    let action: () -> Void
 
     var body: some View {
-        HStack(spacing: spacing) {
-            content()
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: "plus")
+                    .font(.title3.weight(.semibold))
+                    .foregroundColor(.accentColor)
+                    .frame(width: 50, height: 50)
+                    .overlay(
+                        Circle()
+                            .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 1.5, dash: [4]))
+                    )
+
+                Text(title)
+                    .font(.caption2)
+                    .foregroundColor(.accentColor)
+            }
+            .frame(width: 70)
         }
+        .buttonStyle(.plain)
     }
 }
 

@@ -5,38 +5,60 @@ struct LockScreenView: View {
     @State private var passcode = ""
     @State private var showError = false
     @State private var errorMessage = ""
+    @FocusState private var passcodeFocused: Bool
 
     private let security = SecurityService.shared
+    private let settings = AppSettings.load()
+
+    private var usesPasscode: Bool {
+        settings.passcodeEnabled && security.loadPasscode() != nil
+    }
 
     var body: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: 28) {
+            Spacer()
+
             Image(systemName: "lock.fill")
-                .font(.system(size: 60))
-                .foregroundColor(.blue)
+                .font(.system(size: 56))
+                .foregroundColor(.accentColor)
 
             Text("Money Manager")
                 .font(.title.bold())
 
-            Text("Enter your passcode")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            if usesPasscode {
+                Text("Enter your passcode")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
 
-            VStack(spacing: 16) {
-                SecureField("Passcode", text: $passcode)
-                    .keyboardType(.numberPad)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(maxWidth: 200)
+                VStack(spacing: 16) {
+                    SecureField("Passcode", text: $passcode)
+                        .keyboardType(.numberPad)
+                        .textContentType(.oneTimeCode)
+                        .multilineTextAlignment(.center)
+                        .font(.title2.monospacedDigit())
+                        .padding(12)
+                        .background(Color(.secondarySystemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .frame(maxWidth: 220)
+                        .focused($passcodeFocused)
+                        .onSubmit { verifyPasscode() }
 
-                Button(action: { verifyPasscode() }) {
-                    Text("Unlock")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(12)
+                    Button(action: verifyPasscode) {
+                        Text("Unlock")
+                            .font(.headline)
+                            .frame(maxWidth: 220)
+                            .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(passcode.isEmpty)
                 }
-                .frame(maxWidth: 200)
+            }
+
+            if settings.biometricEnabled {
+                Button(action: authenticateWithDevice) {
+                    Label("Unlock with Face ID / Touch ID", systemImage: "faceid")
+                }
+                .buttonStyle(.bordered)
             }
 
             if showError {
@@ -44,21 +66,47 @@ struct LockScreenView: View {
                     .foregroundColor(.red)
                     .font(.caption)
             }
+
+            Spacer()
         }
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .onAppear {
+            if settings.biometricEnabled {
+                authenticateWithDevice()
+            } else {
+                passcodeFocused = true
+            }
+        }
     }
 
     private func verifyPasscode() {
         if security.verifyPasscode(passcode) {
             securityManager.unlock()
         } else {
+            Haptics.error()
             showError = true
             errorMessage = "Invalid passcode"
             passcode = ""
+        }
+    }
+
+    private func authenticateWithDevice() {
+        Task {
+            let success = await security.authenticateDeviceOwner()
+            await MainActor.run {
+                if success {
+                    securityManager.unlock()
+                } else if usesPasscode {
+                    passcodeFocused = true
+                }
+            }
         }
     }
 }
 
 #Preview {
     LockScreenView()
+        .environmentObject(SecurityManager())
 }

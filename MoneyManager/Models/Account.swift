@@ -7,6 +7,28 @@ enum AccountType: String, Codable, CaseIterable {
     case savings = "savings"
     case investment = "investment"
     case other = "other"
+
+    var displayName: String {
+        switch self {
+        case .cash: return "Cash"
+        case .bank: return "Bank Account"
+        case .creditCard: return "Credit Card"
+        case .savings: return "Savings"
+        case .investment: return "Investment"
+        case .other: return "Other"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .cash: return "banknote.fill"
+        case .bank: return "building.columns.fill"
+        case .creditCard: return "creditcard.fill"
+        case .savings: return "archivebox.fill"
+        case .investment: return "chart.line.uptrend.xyaxis"
+        case .other: return "wallet.pass.fill"
+        }
+    }
 }
 
 struct Account: Identifiable, Codable, Hashable {
@@ -34,7 +56,7 @@ struct Account: Identifiable, Codable, Hashable {
         name: String,
         type: AccountType,
         balance: Double = 0.0,
-        currency: String = "USD",
+        currency: String = AppCurrency.code,
         icon: String = "creditcard.fill",
         color: String = "#3498DB",
         isActive: Bool = true,

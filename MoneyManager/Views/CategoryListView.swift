@@ -1,70 +1,61 @@
 import SwiftUI
 
+/// Pushed from the "More" tab, so it relies on the parent NavigationView.
 struct CategoryListView: View {
     @StateObject private var viewModel = CategoryViewModel()
 
     var body: some View {
-        NavigationView {
-            List {
-                if !viewModel.expenseCategories.isEmpty {
-                    Section("Expense Categories") {
-                        ForEach(viewModel.expenseCategories) { category in
-                            CategoryRowView(category: category)
-                                .onTapGesture {
-                                    viewModel.editCategory(category)
-                                }
-                                .swipeActions {
-                                    Button(role: .destructive) {
-                                        Task {
-                                            await viewModel.deleteCategory(category)
-                                        }
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                }
-                        }
-                    }
+        List {
+            Section("Expense Categories") {
+                ForEach(viewModel.expenseCategories) { category in
+                    categoryRow(category)
                 }
+            }
 
-                if !viewModel.incomeCategories.isEmpty {
-                    Section("Income Categories") {
-                        ForEach(viewModel.incomeCategories) { category in
-                            CategoryRowView(category: category)
-                                .onTapGesture {
-                                    viewModel.editCategory(category)
-                                }
-                                .swipeActions {
-                                    Button(role: .destructive) {
-                                        Task {
-                                            await viewModel.deleteCategory(category)
-                                        }
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                }
-                        }
-                    }
+            Section("Income Categories") {
+                ForEach(viewModel.incomeCategories) { category in
+                    categoryRow(category)
                 }
             }
-            .navigationTitle("Categories")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { viewModel.showAddSheet = true }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                    }
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Categories")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    viewModel.prepareNew()
+                    viewModel.showAddSheet = true
+                }) {
+                    Image(systemName: "plus")
                 }
             }
-            .sheet(isPresented: $viewModel.showAddSheet) {
-                CategoryFormView(viewModel: viewModel)
-            }
+        }
+        .sheet(isPresented: $viewModel.showAddSheet, onDismiss: { viewModel.resetForm() }) {
+            CategoryFormView(viewModel: viewModel)
         }
         .task {
             await viewModel.loadCategories()
-            await viewModel.initializeDefaultCategories()
         }
         .refreshable {
             await viewModel.loadCategories()
+        }
+    }
+
+    private func categoryRow(_ category: Category) -> some View {
+        Button {
+            viewModel.editCategory(category)
+        } label: {
+            CategoryRowView(category: category)
+        }
+        .buttonStyle(.plain)
+        .swipeActions {
+            Button(role: .destructive) {
+                Task {
+                    await viewModel.deleteCategory(category)
+                }
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 }
@@ -76,14 +67,14 @@ struct CategoryRowView: View {
         HStack {
             Image(systemName: category.icon)
                 .foregroundColor(Color(hex: category.color))
-                .font(.title2)
-                .frame(width: 40, height: 40)
-                .background(Color(hex: category.color).opacity(0.1))
+                .font(.title3)
+                .frame(width: 36, height: 36)
+                .background(Color(hex: category.color).opacity(0.15))
                 .clipShape(Circle())
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(category.name)
-                    .font(.subheadline.bold())
+                    .font(.body)
 
                 if let budget = category.budgetLimit {
                     Text("Budget: \(budget.formattedAsCurrency())")
@@ -95,22 +86,35 @@ struct CategoryRowView: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .foregroundColor(.secondary)
-                .font(.caption)
+                .foregroundColor(Color(.tertiaryLabel))
+                .font(.caption.weight(.semibold))
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 2)
+        .contentShape(Rectangle())
     }
 }
 
 struct CategoryFormView: View {
     @ObservedObject var viewModel: CategoryViewModel
+    var onSaved: ((Category) -> Void)? = nil
     @Environment(\.dismiss) var dismiss
+
+    private let columns = [GridItem(.adaptive(minimum: 48), spacing: 12)]
 
     var body: some View {
         NavigationView {
             Form {
-                Section("Basic Info") {
-                    TextField("Category Name", text: $viewModel.categoryName)
+                Section {
+                    HStack(spacing: 12) {
+                        Image(systemName: viewModel.categoryIcon)
+                            .font(.title3)
+                            .foregroundColor(.white)
+                            .frame(width: 44, height: 44)
+                            .background(Color(hex: viewModel.categoryColor))
+                            .clipShape(Circle())
+
+                        TextField("Category Name", text: $viewModel.categoryName)
+                    }
 
                     Picker("Type", selection: $viewModel.categoryType) {
                         Text("Expense").tag(CategoryType.expense)
@@ -120,70 +124,81 @@ struct CategoryFormView: View {
                 }
 
                 Section("Icon") {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(viewModel.icons, id: \.self) { icon in
-                                Button(action: {
-                                    viewModel.categoryIcon = icon
-                                }) {
-                                    Image(systemName: icon)
-                                        .font(.title2)
-                                        .frame(width: 50, height: 50)
-                                        .background(viewModel.categoryIcon == icon ? Color.blue.opacity(0.2) : Color(.systemGray6))
-                                        .cornerRadius(12)
-                                }
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(viewModel.icons, id: \.self) { icon in
+                            Button(action: {
+                                viewModel.categoryIcon = icon
+                            }) {
+                                Image(systemName: icon)
+                                    .font(.title3)
+                                    .frame(width: 48, height: 48)
+                                    .foregroundColor(viewModel.categoryIcon == icon ? .white : .primary)
+                                    .background(viewModel.categoryIcon == icon ? Color(hex: viewModel.categoryColor) : Color(.systemGray6))
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
+                            .buttonStyle(.plain)
                         }
-                        .padding(.vertical, 4)
                     }
+                    .padding(.vertical, 4)
                 }
 
                 Section("Color") {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(viewModel.colors, id: \.self) { color in
-                                Button(action: {
-                                    viewModel.categoryColor = color
-                                }) {
-                                    Circle()
-                                        .fill(Color(hex: color))
-                                        .frame(width: 40, height: 40)
-                                        .overlay(
-                                            Circle()
-                                                .stroke(viewModel.categoryColor == color ? Color.primary : .clear, lineWidth: 2)
-                                        )
-                                }
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(viewModel.colors, id: \.self) { color in
+                            Button(action: {
+                                viewModel.categoryColor = color
+                            }) {
+                                Circle()
+                                    .fill(Color(hex: color))
+                                    .frame(width: 36, height: 36)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Color.primary, lineWidth: viewModel.categoryColor == color ? 3 : 0)
+                                            .padding(-4)
+                                    )
+                                    .frame(width: 48, height: 48)
                             }
+                            .buttonStyle(.plain)
                         }
-                        .padding(.vertical, 4)
                     }
+                    .padding(.vertical, 4)
                 }
 
-                Section("Budget (Optional)") {
-                    TextField("Budget Limit", text: $viewModel.budgetLimit)
-                        .keyboardType(.decimalPad)
+                if viewModel.categoryType == .expense {
+                    Section {
+                        HStack {
+                            TextField("Monthly limit", text: $viewModel.budgetLimit)
+                                .keyboardType(.decimalPad)
+                            Text(AppCurrency.symbol)
+                                .foregroundColor(.secondary)
+                        }
+                    } header: {
+                        Text("Budget (Optional)")
+                    }
                 }
             }
             .navigationTitle(viewModel.editingCategory != nil ? "Edit Category" : "New Category")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         Task {
                             if viewModel.editingCategory != nil {
                                 await viewModel.updateCategory()
-                            } else {
-                                await viewModel.addCategory()
+                            } else if let category = await viewModel.addCategory() {
+                                onSaved?(category)
                             }
                             dismiss()
                         }
                     }
+                    .font(.body.weight(.semibold))
+                    .disabled(!viewModel.isFormValid)
                 }
             }
         }
@@ -191,5 +206,7 @@ struct CategoryFormView: View {
 }
 
 #Preview {
-    CategoryListView()
+    NavigationView {
+        CategoryListView()
+    }
 }

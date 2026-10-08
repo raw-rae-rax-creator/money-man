@@ -19,10 +19,14 @@ class CategoryViewModel: ObservableObject {
     private let database = DatabaseService.shared
 
     let icons = [
-        "fork.knife", "car.fill", "bag.fill", "gamecontroller.fill",
-        "doc.text.fill", "heart.fill", "book.fill", "airplane",
+        "fork.knife", "cart.fill", "car.fill", "bus.fill", "fuelpump.fill",
+        "bag.fill", "tshirt.fill", "gamecontroller.fill", "film.fill",
+        "doc.text.fill", "bolt.fill", "wifi", "phone.fill", "house.fill",
+        "heart.fill", "cross.case.fill", "pills.fill", "book.fill",
+        "graduationcap.fill", "airplane", "pawprint.fill", "figure.walk",
+        "gift.fill", "cup.and.saucer.fill", "scissors", "wrench.and.screwdriver.fill",
         "dollarsign.circle.fill", "briefcase.fill", "chart.line.uptrend.xyaxis",
-        "gift.fill", "plus.circle.fill", "tag.fill", "ellipsis.circle"
+        "banknote.fill", "creditcard.fill", "plus.circle.fill", "tag.fill", "ellipsis.circle"
     ]
 
     let colors = [
@@ -44,35 +48,43 @@ class CategoryViewModel: ObservableObject {
         }
     }
 
-    func addCategory() async {
-        guard !categoryName.isEmpty else { return }
+    var isFormValid: Bool {
+        !categoryName.trimmed.isEmpty && (budgetLimit.trimmed.isEmpty || AppCurrency.parseAmount(budgetLimit) != nil)
+    }
+
+    @discardableResult
+    func addCategory() async -> Category? {
+        guard isFormValid else { return nil }
 
         let category = Category(
-            name: categoryName,
+            name: categoryName.trimmed,
             icon: categoryIcon,
             color: categoryColor,
             type: categoryType,
-            budgetLimit: Double(budgetLimit)
+            budgetLimit: AppCurrency.parseAmount(budgetLimit),
+            sortOrder: (categories.map { $0.sortOrder }.filter { $0 < 99 }.max() ?? 0) + 1
         )
 
         do {
             try database.createCategory(category)
             await loadCategories()
             resetForm()
+            return category
         } catch {
             print("Error creating category: \(error)")
+            return nil
         }
     }
 
     func updateCategory() async {
         guard var category = editingCategory else { return }
-        guard !categoryName.isEmpty else { return }
+        guard isFormValid else { return }
 
-        category.name = categoryName
+        category.name = categoryName.trimmed
         category.icon = categoryIcon
         category.color = categoryColor
         category.type = categoryType
-        category.budgetLimit = Double(budgetLimit)
+        category.budgetLimit = AppCurrency.parseAmount(budgetLimit)
 
         do {
             try database.updateCategory(category)
@@ -98,11 +110,16 @@ class CategoryViewModel: ObservableObject {
         categoryIcon = category.icon
         categoryColor = category.color
         categoryType = category.type
-        budgetLimit = category.budgetLimit.map { String($0) } ?? ""
+        budgetLimit = category.budgetLimit.map { AppCurrency.editString($0) } ?? ""
         showAddSheet = true
     }
 
-    private func resetForm() {
+    func prepareNew(type: CategoryType = .expense) {
+        resetForm()
+        categoryType = type
+    }
+
+    func resetForm() {
         categoryName = ""
         categoryIcon = "tag.fill"
         categoryColor = "#3498DB"
@@ -113,18 +130,7 @@ class CategoryViewModel: ObservableObject {
     }
 
     func initializeDefaultCategories() async {
-        do {
-            let existingCategories = try database.fetchCategories()
-            if existingCategories.isEmpty {
-                for category in Category.defaultExpenseCategories {
-                    try database.createCategory(category)
-                }
-                for category in Category.defaultIncomeCategories {
-                    try database.createCategory(category)
-                }
-            }
-        } catch {
-            print("Error initializing default categories: \(error)")
-        }
+        database.seedDefaultsIfNeeded()
+        await loadCategories()
     }
 }

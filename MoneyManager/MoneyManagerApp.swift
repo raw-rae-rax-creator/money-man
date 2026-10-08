@@ -3,47 +3,53 @@ import SwiftUI
 @main
 struct MoneyManagerApp: App {
     @StateObject private var securityManager = SecurityManager()
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage(AppTheme.storageKey) private var themeRaw: String = AppTheme.system.rawValue
+
+    init() {
+        DatabaseService.shared.seedDefaultsIfNeeded()
+    }
 
     var body: some Scene {
         WindowGroup {
-            if securityManager.isAuthenticated {
-                ContentView()
-                    .environmentObject(securityManager)
-            } else {
-                LockScreenView()
-                    .environmentObject(securityManager)
+            Group {
+                if securityManager.isAuthenticated {
+                    ContentView()
+                } else {
+                    LockScreenView()
+                }
+            }
+            .environmentObject(securityManager)
+            .preferredColorScheme(AppTheme(rawValue: themeRaw)?.colorScheme)
+        }
+        .onChange(of: scenePhase) { phase in
+            if phase == .background {
+                securityManager.lock()
             }
         }
     }
 }
 
 class SecurityManager: ObservableObject {
-    @Published var isAuthenticated: Bool = true
-    @Published var isAppLocked: Bool = false
+    @Published var isAuthenticated: Bool
 
-    private let security = SecurityService.shared
-    private let settingsKey = "appSettings"
+    init() {
+        isAuthenticated = !SecurityManager.isLockEnabled
+    }
 
-    func authenticate() async {
-        guard let data = UserDefaults.standard.data(forKey: settingsKey),
-              let settings = try? JSONDecoder().decode(AppSettings.self, from: data) else {
-            isAuthenticated = true
-            return
-        }
+    static var isLockEnabled: Bool {
+        let settings = AppSettings.load()
+        let hasPasscode = settings.passcodeEnabled && SecurityService.shared.loadPasscode() != nil
+        return settings.biometricEnabled || hasPasscode
+    }
 
-        if settings.biometricEnabled {
-            let success = await security.authenticateWithBiometrics()
-            isAuthenticated = success
-        } else if settings.passcodeEnabled {
-            isAppLocked = true
+    func lock() {
+        if SecurityManager.isLockEnabled {
             isAuthenticated = false
-        } else {
-            isAuthenticated = true
         }
     }
 
     func unlock() {
         isAuthenticated = true
-        isAppLocked = false
     }
 }

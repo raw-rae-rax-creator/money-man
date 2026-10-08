@@ -17,10 +17,17 @@ class SettingsViewModel: ObservableObject {
     private let security = SecurityService.shared
     private let importExport = ImportExportService()
 
+    var biometricIcon: String {
+        biometricType == "Touch ID" ? "touchid" : "faceid"
+    }
+
     func loadSettings() {
-        if let data = UserDefaults.standard.data(forKey: "appSettings"),
-           let decoded = try? JSONDecoder().decode(AppSettings.self, from: data) {
-            settings = decoded
+        settings = AppSettings.load()
+
+        // Passcode flag without a stored passcode would mean a lock screen nobody can pass.
+        if settings.passcodeEnabled && security.loadPasscode() == nil {
+            settings.passcodeEnabled = false
+            saveSettings()
         }
 
         isBiometricAvailable = security.isBiometricAvailable()
@@ -36,21 +43,45 @@ class SettingsViewModel: ObservableObject {
     }
 
     func saveSettings() {
-        if let encoded = try? JSONEncoder().encode(settings) {
-            UserDefaults.standard.set(encoded, forKey: "appSettings")
+        settings.save()
+    }
+
+    func setBiometric(_ enabled: Bool) async {
+        if enabled {
+            // Confirm the user can actually authenticate before turning the lock on.
+            guard await security.authenticateWithBiometrics(reason: "Enable \(biometricType) for Money Manager") else { return }
+        }
+        settings.biometricEnabled = enabled
+        saveSettings()
+    }
+
+    func setPasscode(_ passcode: String) -> Bool {
+        do {
+            try security.savePasscode(passcode)
+            settings.passcodeEnabled = true
+            saveSettings()
+            return true
+        } catch {
+            errorMessage = "Could not save passcode"
+            showError = true
+            return false
         }
     }
 
-    func toggleBiometric() async {
-        if settings.biometricEnabled {
-            settings.biometricEnabled = false
-        } else {
-            let success = await security.authenticateWithBiometrics()
-            if success {
-                settings.biometricEnabled = true
-            }
-        }
+    func disablePasscode() {
+        security.deletePasscode()
+        settings.passcodeEnabled = false
         saveSettings()
+    }
+
+    func setNotifications(_ enabled: Bool) {
+        settings.notificationEnabled = enabled
+        saveSettings()
+        if enabled {
+            Task { _ = await NotificationService.shared.requestPermission() }
+        } else {
+            NotificationService.shared.cancelAllNotifications()
+        }
     }
 
     func exportData(format: ExportFormat) {
@@ -61,8 +92,6 @@ class SettingsViewModel: ObservableObject {
             case .json:
                 exportURL = try importExport.exportToJSON()
             }
-            showSuccess = true
-            successMessage = "Data exported successfully"
         } catch {
             showError = true
             errorMessage = error.localizedDescription
@@ -72,7 +101,7 @@ class SettingsViewModel: ObservableObject {
     func importData(from url: URL) {
         do {
             let result: ImportResult
-            if url.pathExtension == "csv" {
+            if url.pathExtension.lowercased() == "csv" {
                 let count = try importExport.importFromCSV(url: url)
                 result = ImportResult(transactionsImported: count)
             } else {
@@ -80,7 +109,10 @@ class SettingsViewModel: ObservableObject {
             }
             importResult = result
             showSuccess = true
-            successMessage = "Imported \(result.totalImported) items successfully"
+            successMessage = "Imported \(result.totalImported) items"
+            if !result.errors.isEmpty {
+                successMessage += "\n\(result.errors.count) items failed"
+            }
         } catch {
             showError = true
             errorMessage = error.localizedDescription
@@ -90,8 +122,6 @@ class SettingsViewModel: ObservableObject {
     func createBackup() {
         do {
             exportURL = try importExport.createBackup()
-            showSuccess = true
-            successMessage = "Backup created successfully"
         } catch {
             showError = true
             errorMessage = error.localizedDescription

@@ -11,6 +11,22 @@ enum DebtStatus: String, Codable, CaseIterable {
     case overdue = "overdue"
 }
 
+/// Частичный возврат долга
+struct DebtRepayment: Identifiable, Codable, Hashable {
+    let id: UUID
+    var amount: Double
+    var date: Date
+    var note: String
+
+    init(id: UUID = UUID(), amount: Double, date: Date = Date(), note: String = "") {
+        self.id = id
+        self.amount = amount
+        self.date = date
+        self.note = note
+    }
+}
+
+/// Долги хранятся отдельно от транзакций и не влияют на баланс и статистику доходов/расходов.
 struct Debt: Identifiable, Codable {
     let id: UUID
     var personName: String
@@ -26,6 +42,13 @@ struct Debt: Identifiable, Codable {
     var reminderEnabled: Bool
     var reminderDaysBefore: Int
     var createdAt: Date
+    var repayments: [DebtRepayment]
+
+    enum CodingKeys: String, CodingKey {
+        case id, personName, amount, type, dateGiven, expectedReturnDate, actualReturnDate
+        case status, note, categoryId, accountId, reminderEnabled, reminderDaysBefore, createdAt
+        case repayments
+    }
 
     init(
         id: UUID = UUID(),
@@ -40,7 +63,8 @@ struct Debt: Identifiable, Codable {
         categoryId: UUID? = nil,
         accountId: UUID? = nil,
         reminderEnabled: Bool = false,
-        reminderDaysBefore: Int = 3
+        reminderDaysBefore: Int = 3,
+        repayments: [DebtRepayment] = []
     ) {
         self.id = id
         self.personName = personName
@@ -56,6 +80,41 @@ struct Debt: Identifiable, Codable {
         self.reminderEnabled = reminderEnabled
         self.reminderDaysBefore = reminderDaysBefore
         self.createdAt = Date()
+        self.repayments = repayments
+    }
+
+    // Debts saved before repayments existed have no "repayments" key.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        personName = try container.decode(String.self, forKey: .personName)
+        amount = try container.decode(Double.self, forKey: .amount)
+        type = try container.decode(DebtType.self, forKey: .type)
+        dateGiven = try container.decode(Date.self, forKey: .dateGiven)
+        expectedReturnDate = try container.decodeIfPresent(Date.self, forKey: .expectedReturnDate)
+        actualReturnDate = try container.decodeIfPresent(Date.self, forKey: .actualReturnDate)
+        status = try container.decode(DebtStatus.self, forKey: .status)
+        note = try container.decodeIfPresent(String.self, forKey: .note) ?? ""
+        categoryId = try container.decodeIfPresent(UUID.self, forKey: .categoryId)
+        accountId = try container.decodeIfPresent(UUID.self, forKey: .accountId)
+        reminderEnabled = try container.decodeIfPresent(Bool.self, forKey: .reminderEnabled) ?? false
+        reminderDaysBefore = try container.decodeIfPresent(Int.self, forKey: .reminderDaysBefore) ?? 3
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? dateGiven
+        repayments = try container.decodeIfPresent([DebtRepayment].self, forKey: .repayments) ?? []
+    }
+
+    var repaidAmount: Double {
+        repayments.reduce(0) { $0 + $1.amount }
+    }
+
+    /// Сколько ещё осталось вернуть
+    var remainingAmount: Double {
+        status == .returned ? 0 : max(amount - repaidAmount, 0)
+    }
+
+    var repaidFraction: Double {
+        guard amount > 0 else { return 0 }
+        return status == .returned ? 1 : min(repaidAmount / amount, 1)
     }
 
     var daysUntilDue: Int? {

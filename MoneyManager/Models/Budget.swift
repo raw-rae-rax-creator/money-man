@@ -4,6 +4,14 @@ enum BudgetPeriod: String, Codable, CaseIterable {
     case weekly = "weekly"
     case monthly = "monthly"
     case yearly = "yearly"
+
+    var calendarComponent: Calendar.Component {
+        switch self {
+        case .weekly: return .weekOfYear
+        case .monthly: return .month
+        case .yearly: return .year
+        }
+    }
 }
 
 struct Budget: Identifiable, Codable {

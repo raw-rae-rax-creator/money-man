@@ -53,4 +53,14 @@ enum RecurringFrequency: String, Codable, CaseIterable {
     case biweekly = "biweekly"
     case monthly = "monthly"
     case yearly = "yearly"
+
+    var dateComponent: DateComponents {
+        switch self {
+        case .daily: return DateComponents(day: 1)
+        case .weekly: return DateComponents(day: 7)
+        case .biweekly: return DateComponents(day: 14)
+        case .monthly: return DateComponents(month: 1)
+        case .yearly: return DateComponents(year: 1)
+        }
+    }
 }

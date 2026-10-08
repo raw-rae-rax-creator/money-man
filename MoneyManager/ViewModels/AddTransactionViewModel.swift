@@ -20,7 +20,23 @@ class AddTransactionViewModel: ObservableObject {
     @Published var errorMessage: String = ""
     @Published var isSaving: Bool = false
 
+    let editingTransaction: Transaction?
     private let database = DatabaseService.shared
+
+    var isEditing: Bool { editingTransaction != nil }
+
+    init(editing transaction: Transaction? = nil) {
+        editingTransaction = transaction
+        if let transaction = transaction {
+            amount = AppCurrency.editString(transaction.amount)
+            type = transaction.type
+            note = transaction.note
+            date = transaction.date
+            isRecurring = transaction.isRecurring
+            recurringFrequency = transaction.recurringFrequency ?? .monthly
+            tags = transaction.tags
+        }
+    }
 
     func loadData() async {
         do {
@@ -28,11 +44,14 @@ class AddTransactionViewModel: ObservableObject {
             categories = try database.fetchCategories(type: categoryType)
             accounts = try database.fetchAccounts()
 
-            if selectedCategory == nil && !categories.isEmpty {
-                selectedCategory = categories.first
+            // Keep the current choice only if it's valid for the selected type,
+            // otherwise an income could end up saved with an expense category.
+            if !categories.contains(where: { $0.id == selectedCategory?.id }) {
+                selectedCategory = categories.first { $0.id == editingTransaction?.categoryId } ?? categories.first
             }
-            if selectedAccount == nil && !accounts.isEmpty {
-                selectedAccount = accounts.first
+
+            if !accounts.contains(where: { $0.id == selectedAccount?.id }) {
+                selectedAccount = accounts.first { $0.id == editingTransaction?.accountId } ?? accounts.first
             }
         } catch {
             print("Error loading data: \(error)")
@@ -40,11 +59,11 @@ class AddTransactionViewModel: ObservableObject {
     }
 
     func addTag() {
-        let trimmed = newTag.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = newTag.trimmed
         if !trimmed.isEmpty && !tags.contains(trimmed) {
             tags.append(trimmed)
-            newTag = ""
         }
+        newTag = ""
     }
 
     func removeTag(_ tag: String) {
@@ -52,44 +71,62 @@ class AddTransactionViewModel: ObservableObject {
     }
 
     func save() async -> Bool {
-        guard validate() else {
+        guard validate(),
+              let amountValue = AppCurrency.parseAmount(amount),
+              let category = selectedCategory,
+              let account = selectedAccount else {
             showError = true
+            Haptics.error()
             return false
         }
 
         isSaving = true
         defer { isSaving = false }
 
+        // A tag typed but not confirmed with "+" is still meant to be saved.
+        addTag()
+
         do {
-            guard let amountValue = Double(amount),
-                  let category = selectedCategory,
-                  let account = selectedAccount else {
-                errorMessage = "Invalid data"
-                return false
-            }
-
-            let transaction = Transaction(
-                amount: amountValue,
-                type: type,
-                categoryId: category.id,
-                accountId: account.id,
-                note: note,
-                date: date,
-                isRecurring: isRecurring,
-                recurringFrequency: isRecurring ? recurringFrequency : nil,
-                tags: tags
-            )
-
-            try database.createTransaction(transaction)
-
-            var updatedAccount = account
-            if type == .income {
-                updatedAccount.balance += amountValue
+            if var transaction = editingTransaction {
+                transaction.amount = amountValue
+                transaction.type = type
+                transaction.categoryId = category.id
+                transaction.accountId = account.id
+                transaction.note = note.trimmed
+                transaction.date = date
+                transaction.isRecurring = isRecurring
+                transaction.recurringFrequency = isRecurring ? recurringFrequency : nil
+                transaction.tags = tags
+                try database.updateTransaction(transaction)
             } else {
-                updatedAccount.balance -= amountValue
+                let transaction = Transaction(
+                    amount: amountValue,
+                    type: type,
+                    categoryId: category.id,
+                    accountId: account.id,
+                    note: note.trimmed,
+                    date: date,
+                    isRecurring: isRecurring,
+                    recurringFrequency: isRecurring ? recurringFrequency : nil,
+                    tags: tags
+                )
+                try database.createTransaction(transaction)
             }
-            try database.updateAccount(updatedAccount)
 
+            Haptics.success()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            showError = true
+            Haptics.error()
+            return false
+        }
+    }
+
+    func delete() async -> Bool {
+        guard let transaction = editingTransaction else { return false }
+        do {
+            try database.deleteTransaction(id: transaction.id)
             return true
         } catch {
             errorMessage = error.localizedDescription
@@ -99,7 +136,7 @@ class AddTransactionViewModel: ObservableObject {
     }
 
     private func validate() -> Bool {
-        guard let amountValue = Double(amount), amountValue > 0 else {
+        guard let amountValue = AppCurrency.parseAmount(amount), amountValue > 0 else {
             errorMessage = "Please enter a valid amount"
             return false
         }

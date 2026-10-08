@@ -98,7 +98,7 @@ struct Subscription: Identifiable, Codable {
         case .yearly:
             return amount / 12
         case .weekly:
-            return amount * 4
+            return amount * 52 / 12
         case .quarterly:
             return amount / 3
         }
@@ -114,4 +114,13 @@ enum BillingCycle: String, Codable, CaseIterable {
     case monthly = "monthly"
     case quarterly = "quarterly"
     case yearly = "yearly"
+
+    var dateComponent: DateComponents {
+        switch self {
+        case .weekly: return DateComponents(day: 7)
+        case .monthly: return DateComponents(month: 1)
+        case .quarterly: return DateComponents(month: 3)
+        case .yearly: return DateComponents(year: 1)
+        }
+    }
 }

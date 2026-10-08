@@ -14,7 +14,7 @@ extension Color {
         case 8:
             (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
         default:
-            (a, r, g, b) = (1, 1, 1, 0)
+            (a, r, g, b) = (255, 128, 128, 128)
         }
 
         self.init(
@@ -54,13 +54,54 @@ extension Date {
         let calendar = Calendar.current
         return calendar.isDate(self, equalTo: Date(), toGranularity: .month)
     }
+
+    /// Full calendar period containing this date, e.g. the whole month.
+    /// `end` is exclusive (start of the next period), so pair it with `date < end`.
+    func interval(of component: Calendar.Component) -> DateInterval {
+        Calendar.current.dateInterval(of: component, for: self) ?? DateInterval(start: self, duration: 0)
+    }
 }
 
 extension Double {
-    func formattedAsCurrency(code: String = "USD") -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = code
-        return formatter.string(from: NSNumber(value: self)) ?? "$\(self)"
+    func formattedAsCurrency(code: String? = nil) -> String {
+        AppCurrency.format(self, code: code)
+    }
+}
+
+extension String {
+    var trimmed: String {
+        trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+// MARK: - Styling
+
+struct CardBackground: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+extension View {
+    func cardStyle() -> some View {
+        modifier(CardBackground())
+    }
+}
+
+enum Haptics {
+    static func success() {
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
+    static func error() {
+        UINotificationFeedbackGenerator().notificationOccurred(.error)
+    }
+
+    static func tap() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 }

@@ -16,7 +16,7 @@ class GoalsViewModel: ObservableObject {
     @Published var goalColor: String = "#3498DB"
 
     private let database = DatabaseService.shared
-    private let goalsKey = "savingsGoals"
+    private let goalsKey = ImportExportService.goalsKey
 
     let icons = ["target", "dollarsign.circle.fill", "house.fill", "car.fill", "airplane", "graduationcap.fill", "heart.fill", "gift.fill"]
     let colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD", "#F7DC6F", "#2ECC71", "#3498DB"]
@@ -37,14 +37,19 @@ class GoalsViewModel: ObservableObject {
         }
     }
 
-    func addGoal() {
-        guard let target = Double(targetAmount), target > 0 else { return }
-        guard !goalName.isEmpty else { return }
+    var isFormValid: Bool {
+        guard let target = AppCurrency.parseAmount(targetAmount), target > 0 else { return false }
+        if !currentAmount.trimmed.isEmpty && AppCurrency.parseAmount(currentAmount) == nil { return false }
+        return !goalName.trimmed.isEmpty
+    }
 
-        let current = Double(currentAmount) ?? 0
+    func addGoal() {
+        guard isFormValid, let target = AppCurrency.parseAmount(targetAmount) else { return }
+
+        let current = AppCurrency.parseAmount(currentAmount) ?? 0
 
         let goal = SavingsGoal(
-            name: goalName,
+            name: goalName.trimmed,
             targetAmount: target,
             currentAmount: current,
             deadline: deadline,
@@ -54,17 +59,17 @@ class GoalsViewModel: ObservableObject {
 
         goals.append(goal)
         saveGoals()
+        Haptics.success()
         resetForm()
     }
 
     func updateGoal() {
         guard var goal = editingGoal else { return }
-        guard let target = Double(targetAmount), target > 0 else { return }
-        guard !goalName.isEmpty else { return }
+        guard isFormValid, let target = AppCurrency.parseAmount(targetAmount) else { return }
 
-        goal.name = goalName
+        goal.name = goalName.trimmed
         goal.targetAmount = target
-        goal.currentAmount = Double(currentAmount) ?? goal.currentAmount
+        goal.currentAmount = AppCurrency.parseAmount(currentAmount) ?? goal.currentAmount
         goal.deadline = deadline
         goal.icon = goalIcon
         goal.color = goalColor
@@ -83,22 +88,23 @@ class GoalsViewModel: ObservableObject {
 
     func addToGoal(_ goal: SavingsGoal, amount: Double) {
         guard let index = goals.firstIndex(where: { $0.id == goal.id }) else { return }
-        goals[index].currentAmount += amount
+        goals[index].currentAmount = max(goals[index].currentAmount + amount, 0)
         saveGoals()
+        Haptics.success()
     }
 
     func editGoal(_ goal: SavingsGoal) {
         editingGoal = goal
         goalName = goal.name
-        targetAmount = String(goal.targetAmount)
-        currentAmount = String(goal.currentAmount)
+        targetAmount = AppCurrency.editString(goal.targetAmount)
+        currentAmount = AppCurrency.editString(goal.currentAmount)
         deadline = goal.deadline ?? Date()
         goalIcon = goal.icon
         goalColor = goal.color
         showAddSheet = true
     }
 
-    private func resetForm() {
+    func resetForm() {
         goalName = ""
         targetAmount = ""
         currentAmount = ""

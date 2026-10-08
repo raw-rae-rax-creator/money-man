@@ -1,53 +1,48 @@
 import SwiftUI
 
+enum AppTab: Hashable {
+    case dashboard, transactions, debts, reports, more
+}
+
 struct ContentView: View {
-    @State private var selectedTab = 0
+    @State private var selectedTab: AppTab = .dashboard
+    @AppStorage(AppCurrency.storageKey) private var currencyCode: String = AppCurrency.defaultCode
 
     var body: some View {
+        // iOS shows at most 5 tabs; the rest live in "More".
         TabView(selection: $selectedTab) {
-            DashboardView()
+            DashboardView(selectedTab: $selectedTab)
                 .tabItem {
-                    Label("Dashboard", systemImage: "house.fill")
+                    Label("Overview", systemImage: "house.fill")
                 }
-                .tag(0)
+                .tag(AppTab.dashboard)
 
             TransactionListView()
                 .tabItem {
                     Label("Transactions", systemImage: "list.bullet.rectangle")
                 }
-                .tag(1)
-
-            GoalsView()
-                .tabItem {
-                    Label("Goals", systemImage: "target")
-                }
-                .tag(2)
-
-            BillsView()
-                .tabItem {
-                    Label("Bills", systemImage: "doc.text.fill")
-                }
-                .tag(3)
+                .tag(AppTab.transactions)
 
             DebtsView()
                 .tabItem {
-                    Label("Debts", systemImage: "person.2.circle")
+                    Label("Debts", systemImage: "person.2.fill")
                 }
-                .tag(4)
+                .tag(AppTab.debts)
 
             ReportsView()
                 .tabItem {
                     Label("Reports", systemImage: "chart.pie.fill")
                 }
-                .tag(5)
+                .tag(AppTab.reports)
 
             SettingsView()
                 .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
+                    Label("More", systemImage: "ellipsis.circle.fill")
                 }
-                .tag(6)
+                .tag(AppTab.more)
         }
-        .tint(.blue)
+        // Rebuild screens so every amount is re-formatted after a currency change.
+        .id(currencyCode)
     }
 }
 

@@ -14,6 +14,11 @@ class BudgetViewModel: ObservableObject {
 
     private let database = DatabaseService.shared
 
+    var isFormValid: Bool {
+        guard let amount = AppCurrency.parseAmount(budgetAmount) else { return false }
+        return amount > 0
+    }
+
     func loadBudgets() async {
         isLoading = true
         defer { isLoading = false }
@@ -28,36 +33,39 @@ class BudgetViewModel: ObservableObject {
 
     func calculateBudgetSummaries() async {
         var summaries: [BudgetSummary] = []
-
-        let calendar = Calendar.current
-        let now = Date()
-        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
-        let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
-
-        let categoryTotals = try? database.getTransactionsByCategory(from: startOfMonth, to: endOfMonth)
-        let categories = try? database.fetchCategories(type: .expense)
+        let categories = (try? database.fetchCategories(type: .expense)) ?? []
 
         for budget in budgets {
-            let category = categories?.first { $0.id == budget.categoryId }
-            let spent = categoryTotals?[budget.categoryId ?? UUID()] ?? 0
-            let remaining = budget.amount - spent
+            // Each budget is measured against its own period (week / month / year).
+            let period = Date().interval(of: budget.period.calendarComponent)
+            let expenses = ((try? database.fetchTransactions(from: period.start, to: period.end)) ?? [])
+                .filter { $0.type == .expense }
+
+            let spent: Double
+            if let categoryId = budget.categoryId {
+                spent = expenses.filter { $0.categoryId == categoryId }.reduce(0) { $0 + $1.amount }
+            } else {
+                // "Total Budget" covers all expenses.
+                spent = expenses.reduce(0) { $0 + $1.amount }
+            }
+
+            let category = categories.first { $0.id == budget.categoryId }
             let percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0
 
-            let summary = BudgetSummary(
+            summaries.append(BudgetSummary(
                 category: category,
                 budget: budget,
                 spent: spent,
-                remaining: remaining,
+                remaining: budget.amount - spent,
                 percentage: percentage
-            )
-            summaries.append(summary)
+            ))
         }
 
         budgetSummaries = summaries
     }
 
     func addBudget() async {
-        guard let amount = Double(budgetAmount), amount > 0 else { return }
+        guard isFormValid, let amount = AppCurrency.parseAmount(budgetAmount) else { return }
 
         let budget = Budget(
             categoryId: selectedCategory?.id,
@@ -68,6 +76,7 @@ class BudgetViewModel: ObservableObject {
         do {
             try database.createBudget(budget)
             await loadBudgets()
+            Haptics.success()
             resetForm()
         } catch {
             print("Error creating budget: \(error)")
@@ -83,7 +92,7 @@ class BudgetViewModel: ObservableObject {
         }
     }
 
-    private func resetForm() {
+    func resetForm() {
         selectedCategory = nil
         budgetAmount = ""
         budgetPeriod = .monthly

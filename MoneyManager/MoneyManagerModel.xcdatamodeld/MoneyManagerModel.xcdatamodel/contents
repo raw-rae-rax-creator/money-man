@@ -6,11 +6,11 @@
         <attribute name="type" attributeType="String"/>
         <attribute name="categoryId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="accountId" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="note" attributeType="String"/>
+        <attribute name="note" attributeType="String" defaultValueString=""/>
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="isRecurring" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="recurringFrequency" attributeType="String"/>
-        <attribute name="tags" attributeType="String"/>
+        <attribute name="recurringFrequency" optional="YES" attributeType="String"/>
+        <attribute name="tags" attributeType="String" defaultValueString=""/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
@@ -20,7 +20,7 @@
         <attribute name="icon" attributeType="String"/>
         <attribute name="color" attributeType="String"/>
         <attribute name="type" attributeType="String"/>
-        <attribute name="parentId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="parentId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="budgetLimit" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="isActive" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="sortOrder" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -40,11 +40,11 @@
     </entity>
     <entity name="BudgetEntity" representedClassName="BudgetEntity" syncable="YES">
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="categoryId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="categoryId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="amount" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="period" attributeType="String"/>
         <attribute name="startDate" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="endDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="isActive" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
         <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
     </entity>

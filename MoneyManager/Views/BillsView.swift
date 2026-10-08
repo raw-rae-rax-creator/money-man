@@ -1,41 +1,75 @@
 import SwiftUI
 
+/// Pushed from the "More" tab, so it relies on the parent NavigationView.
 struct BillsView: View {
     @StateObject private var viewModel = BillsViewModel()
 
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    subscriptionsSummary
-                    upcomingBillsSection
-                    subscriptionsList
-                    overdueBillsSection
-                }
-                .padding()
+        List {
+            Section {
+                subscriptionsSummary
             }
-            .navigationTitle("Bills & Subscriptions")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button(action: { viewModel.showAddBillSheet = true }) {
-                            Label("Add Bill", systemImage: "doc.text.fill")
-                        }
-                        Button(action: { viewModel.showAddSubscriptionSheet = true }) {
-                            Label("Add Subscription", systemImage: "repeat")
-                        }
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
+
+            if !viewModel.overdueBills.isEmpty {
+                Section {
+                    ForEach(viewModel.overdueBills) { bill in
+                        BillRowView(bill: bill, viewModel: viewModel)
+                    }
+                } header: {
+                    Text("Overdue")
+                        .foregroundColor(.red)
+                }
+            }
+
+            Section("Upcoming Bills") {
+                if viewModel.upcomingBills.isEmpty {
+                    Text("No upcoming bills")
+                        .foregroundColor(.secondary)
+                } else {
+                    ForEach(viewModel.upcomingBills) { bill in
+                        BillRowView(bill: bill, viewModel: viewModel)
                     }
                 }
             }
-            .sheet(isPresented: $viewModel.showAddBillSheet) {
-                BillFormView(viewModel: viewModel)
+
+            Section("Subscriptions") {
+                if viewModel.subscriptions.isEmpty {
+                    Text("No subscriptions")
+                        .foregroundColor(.secondary)
+                } else {
+                    ForEach(viewModel.subscriptions) { subscription in
+                        SubscriptionRowView(subscription: subscription, viewModel: viewModel)
+                    }
+                }
             }
-            .sheet(isPresented: $viewModel.showAddSubscriptionSheet) {
-                SubscriptionFormView(viewModel: viewModel)
+        }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Bills & Subscriptions")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    Button(action: {
+                        viewModel.resetBillForm()
+                        viewModel.showAddBillSheet = true
+                    }) {
+                        Label("Add Bill", systemImage: "doc.text.fill")
+                    }
+                    Button(action: {
+                        viewModel.resetSubscriptionForm()
+                        viewModel.showAddSubscriptionSheet = true
+                    }) {
+                        Label("Add Subscription", systemImage: "repeat")
+                    }
+                } label: {
+                    Image(systemName: "plus")
+                }
             }
+        }
+        .sheet(isPresented: $viewModel.showAddBillSheet) {
+            BillFormView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $viewModel.showAddSubscriptionSheet) {
+            SubscriptionFormView(viewModel: viewModel)
         }
         .onAppear {
             viewModel.loadData()
@@ -46,21 +80,21 @@ struct BillsView: View {
         VStack(spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Monthly")
+                    Text("Subscriptions / month")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text(formatCurrency(viewModel.totalMonthlySubscriptions))
+                    Text(viewModel.totalMonthlySubscriptions.formattedAsCurrency())
                         .font(.title2.bold())
-                        .foregroundColor(.blue)
+                        .foregroundColor(.accentColor)
                 }
 
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("Yearly")
+                    Text("Per year")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text(formatCurrency(viewModel.totalYearlySubscriptions))
+                    Text(viewModel.totalYearlySubscriptions.formattedAsCurrency())
                         .font(.title3.bold())
                         .foregroundColor(.secondary)
                 }
@@ -69,112 +103,15 @@ struct BillsView: View {
             Divider()
 
             HStack {
-                Label("\(viewModel.subscriptions.count) Subscriptions", systemImage: "repeat")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
+                Label("Due this month", systemImage: "calendar")
                 Spacer()
-
-                Label("\(viewModel.bills.filter { !$0.isPaid }.count) Pending Bills", systemImage: "doc.text.fill")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text(viewModel.totalDueThisMonth.formattedAsCurrency())
+                    .fontWeight(.semibold)
             }
+            .font(.caption)
+            .foregroundColor(.secondary)
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-        )
-    }
-
-    private var upcomingBillsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Upcoming Bills")
-                    .font(.headline)
-                Spacer()
-            }
-
-            if viewModel.upcomingBills.isEmpty {
-                Text("No upcoming bills")
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding()
-            } else {
-                ForEach(viewModel.upcomingBills) { bill in
-                    BillRowView(bill: bill, viewModel: viewModel)
-                }
-            }
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-        )
-    }
-
-    private var overdueBillsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Overdue")
-                    .font(.headline)
-                    .foregroundColor(.red)
-                Spacer()
-            }
-
-            if viewModel.overdueBills.isEmpty {
-                Text("No overdue bills")
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding()
-            } else {
-                ForEach(viewModel.overdueBills) { bill in
-                    BillRowView(bill: bill, viewModel: viewModel)
-                }
-            }
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-        )
-    }
-
-    private var subscriptionsList: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Subscriptions")
-                    .font(.headline)
-                Spacer()
-            }
-
-            if viewModel.subscriptions.isEmpty {
-                Text("No subscriptions")
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding()
-            } else {
-                ForEach(viewModel.subscriptions) { subscription in
-                    SubscriptionRowView(subscription: subscription, viewModel: viewModel)
-                }
-            }
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-        )
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
+        .padding(.vertical, 4)
     }
 }
 
@@ -185,10 +122,17 @@ struct BillRowView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(bill.name)
-                    .font(.subheadline.bold())
+                HStack(spacing: 4) {
+                    Text(bill.name)
+                        .font(.subheadline.bold())
+                    if bill.isRecurring {
+                        Image(systemName: "repeat")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
 
-                Text("Due \(bill.dueDate, style: .date)")
+                Text("Due \(bill.dueDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -196,8 +140,8 @@ struct BillRowView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text(formatCurrency(bill.amount))
-                    .font(.subheadline.bold())
+                Text(bill.amount.formattedAsCurrency())
+                    .font(.subheadline.bold().monospacedDigit())
                     .foregroundColor(bill.isOverdue ? .red : .primary)
 
                 if bill.isOverdue {
@@ -214,32 +158,25 @@ struct BillRowView: View {
                         .foregroundColor(.green)
                 }
             }
-
-            if !bill.isPaid {
-                Button(action: {
-                    viewModel.markBillAsPaid(bill)
-                }) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                        .font(.title2)
-                }
-            }
         }
         .padding(.vertical, 4)
-        .swipeActions {
+        .swipeActions(edge: .leading) {
+            if !bill.isPaid {
+                Button {
+                    viewModel.markBillAsPaid(bill)
+                } label: {
+                    Label("Paid", systemImage: "checkmark.circle.fill")
+                }
+                .tint(.green)
+            }
+        }
+        .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
                 viewModel.deleteBill(bill)
             } label: {
                 Label("Delete", systemImage: "trash")
             }
         }
-    }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
     }
 }
 
@@ -253,7 +190,7 @@ struct SubscriptionRowView: View {
                 Text(subscription.name)
                     .font(.subheadline.bold())
 
-                Text("Next: \(subscription.nextBillingDate, style: .date)")
+                Text("Next: \(subscription.nextBillingDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -261,8 +198,8 @@ struct SubscriptionRowView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text(formatCurrency(subscription.amount))
-                    .font(.subheadline.bold())
+                Text(subscription.amount.formattedAsCurrency())
+                    .font(.subheadline.bold().monospacedDigit())
 
                 Text("/ \(subscription.billingCycle.rawValue)")
                     .font(.caption)
@@ -278,13 +215,6 @@ struct SubscriptionRowView: View {
             }
         }
     }
-
-    private func formatCurrency(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        return formatter.string(from: NSNumber(value: amount)) ?? "$\(amount)"
-    }
 }
 
 struct BillFormView: View {
@@ -298,10 +228,10 @@ struct BillFormView: View {
                     TextField("Bill Name", text: $viewModel.billName)
 
                     HStack {
-                        Text("$")
-                            .foregroundColor(.secondary)
                         TextField("Amount", text: $viewModel.billAmount)
                             .keyboardType(.decimalPad)
+                        Text(AppCurrency.symbol)
+                            .foregroundColor(.secondary)
                     }
 
                     DatePicker("Due Date", selection: $viewModel.billDueDate, displayedComponents: .date)
@@ -321,23 +251,25 @@ struct BillFormView: View {
                 }
 
                 Section("Reminders") {
-                    Stepper("Remind \(viewModel.billReminderDays) days before", value: $viewModel.billReminderDays, in: 1...30)
+                    Stepper("Remind \(viewModel.billReminderDays) days before", value: $viewModel.billReminderDays, in: 0...30)
                 }
             }
             .navigationTitle("New Bill")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         viewModel.addBill()
                         dismiss()
                     }
+                    .font(.body.weight(.semibold))
+                    .disabled(!viewModel.isBillFormValid)
                 }
             }
         }
@@ -355,10 +287,10 @@ struct SubscriptionFormView: View {
                     TextField("Subscription Name", text: $viewModel.subscriptionName)
 
                     HStack {
-                        Text("$")
-                            .foregroundColor(.secondary)
                         TextField("Amount", text: $viewModel.subscriptionAmount)
                             .keyboardType(.decimalPad)
+                        Text(AppCurrency.symbol)
+                            .foregroundColor(.secondary)
                     }
 
                     Picker("Billing Cycle", selection: $viewModel.subscriptionCycle) {
@@ -374,17 +306,19 @@ struct SubscriptionFormView: View {
             .navigationTitle("New Subscription")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         viewModel.addSubscription()
                         dismiss()
                     }
+                    .font(.body.weight(.semibold))
+                    .disabled(!viewModel.isSubscriptionFormValid)
                 }
             }
         }
@@ -392,5 +326,7 @@ struct SubscriptionFormView: View {
 }
 
 #Preview {
-    BillsView()
+    NavigationView {
+        BillsView()
+    }
 }
