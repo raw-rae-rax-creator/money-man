@@ -9,6 +9,8 @@
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Face ID is used to unlock Money Manager and protect your financial data.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Your location is saved with new transactions so you can see where you spent money. You can turn this off in Settings.</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>UILaunchScreen</key>

@@ -95,6 +95,45 @@ class CategoryViewModel: ObservableObject {
         }
     }
 
+    /// Drag-to-reorder in the category list. The order is used everywhere categories are picked.
+    func moveCategories(type: CategoryType, from source: IndexSet, to destination: Int) {
+        var list = type == .income ? incomeCategories : expenseCategories
+        list.move(fromOffsets: source, toOffset: destination)
+        saveOrder(list, type: type)
+    }
+
+    /// Most used categories first.
+    func sortByUsage(type: CategoryType) {
+        let counts = (try? database.categoryUsageCounts()) ?? [:]
+        let list = type == .income ? incomeCategories : expenseCategories
+        // Stable: equal counts keep their current relative order.
+        let sorted = list.enumerated().sorted { lhs, rhs in
+            let left = counts[lhs.element.id] ?? 0
+            let right = counts[rhs.element.id] ?? 0
+            return left != right ? left > right : lhs.offset < rhs.offset
+        }.map { $0.element }
+        saveOrder(sorted, type: type)
+    }
+
+    private func saveOrder(_ list: [Category], type: CategoryType) {
+        var ordered = list
+        for index in ordered.indices {
+            ordered[index].sortOrder = index + 1
+        }
+        if type == .income {
+            incomeCategories = ordered
+        } else {
+            expenseCategories = ordered
+        }
+        categories = expenseCategories + incomeCategories
+
+        do {
+            try database.updateCategoryOrder(ordered.map { $0.id })
+        } catch {
+            print("Error saving category order: \(error)")
+        }
+    }
+
     func deleteCategory(_ category: Category) async {
         do {
             try database.deleteCategory(id: category.id)
@@ -106,7 +145,7 @@ class CategoryViewModel: ObservableObject {
 
     func editCategory(_ category: Category) {
         editingCategory = category
-        categoryName = category.name
+        categoryName = category.displayName
         categoryIcon = category.icon
         categoryColor = category.color
         categoryType = category.type

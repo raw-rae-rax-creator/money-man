@@ -51,6 +51,12 @@ struct Category: Identifiable, Codable, Hashable {
 }
 
 extension Category {
+    /// Default categories are stored with English names and translated on display,
+    /// so they follow the app language. Custom names have no translation and stay as typed.
+    var displayName: String {
+        name.localized
+    }
+
     static let defaultExpenseCategories: [Category] = [
         Category(name: "Food & Dining", icon: "fork.knife", color: "#FF6B6B", type: .expense, sortOrder: 1),
         Category(name: "Transportation", icon: "car.fill", color: "#4ECDC4", type: .expense, sortOrder: 2),

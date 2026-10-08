@@ -115,6 +115,15 @@ enum BillingCycle: String, Codable, CaseIterable {
     case quarterly = "quarterly"
     case yearly = "yearly"
 
+    var title: String {
+        switch self {
+        case .weekly: return "Weekly".localized
+        case .monthly: return "Monthly".localized
+        case .quarterly: return "Quarterly".localized
+        case .yearly: return "Yearly".localized
+        }
+    }
+
     var dateComponent: DateComponents {
         switch self {
         case .weekly: return DateComponents(day: 7)

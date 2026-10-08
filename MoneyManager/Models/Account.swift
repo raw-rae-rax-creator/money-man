@@ -10,12 +10,12 @@ enum AccountType: String, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .cash: return "Cash"
-        case .bank: return "Bank Account"
-        case .creditCard: return "Credit Card"
-        case .savings: return "Savings"
-        case .investment: return "Investment"
-        case .other: return "Other"
+        case .cash: return "Cash".localized
+        case .bank: return "Bank Account".localized
+        case .creditCard: return "Credit Card".localized
+        case .savings: return "Savings".localized
+        case .investment: return "Investment".localized
+        case .other: return "Other".localized
         }
     }
 
@@ -42,6 +42,11 @@ struct Account: Identifiable, Codable, Hashable {
     var isActive: Bool
     var includeInTotal: Bool
     var createdAt: Date
+
+    /// The seeded "Cash" account is translated on display.
+    var displayName: String {
+        name.localized
+    }
 
     static func == (lhs: Account, rhs: Account) -> Bool {
         return lhs.id == rhs.id

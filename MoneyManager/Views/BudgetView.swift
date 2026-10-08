@@ -101,11 +101,9 @@ struct BudgetRowView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 if let category = summary.category {
-                    Image(systemName: category.icon)
-                        .foregroundColor(Color(hex: category.color))
-                        .font(.title3)
+                    CategoryIconView(category: category, size: 30)
 
-                    Text(category.name)
+                    Text(category.displayName)
                         .font(.headline)
                 } else {
                     Image(systemName: "sum")
@@ -116,7 +114,7 @@ struct BudgetRowView: View {
                         .font(.headline)
                 }
 
-                Text(summary.budget.period.rawValue.capitalized)
+                Text(summary.budget.period.title)
                     .font(.caption2.weight(.semibold))
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 6)
@@ -153,7 +151,7 @@ struct BudgetRowView: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text(summary.remaining >= 0 ? "Remaining" : "Over budget")
+                    Text(summary.remaining >= 0 ? LocalizedStringKey("Remaining") : LocalizedStringKey("Over budget"))
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Text(abs(summary.remaining).formattedAsCurrency())
@@ -188,7 +186,7 @@ struct BudgetFormView: View {
                     Picker("Category", selection: $viewModel.selectedCategory) {
                         Text("All Expenses").tag(nil as Category?)
                         ForEach(categories) { category in
-                            Text(category.name).tag(Optional(category))
+                            Text(category.displayName).tag(Optional(category))
                         }
                     }
                     .pickerStyle(.menu)
@@ -196,7 +194,7 @@ struct BudgetFormView: View {
 
                 Section("Limit") {
                     HStack {
-                        TextField("0", text: $viewModel.budgetAmount)
+                        TextField("0", text: $viewModel.budgetAmount.amountFormatted())
                             .keyboardType(.decimalPad)
                             .font(.title2)
                         Text(AppCurrency.symbol)
@@ -208,7 +206,7 @@ struct BudgetFormView: View {
                 Section("Period") {
                     Picker("Period", selection: $viewModel.budgetPeriod) {
                         ForEach(BudgetPeriod.allCases, id: \.self) { period in
-                            Text(period.rawValue.capitalized).tag(period)
+                            Text(period.title).tag(period)
                         }
                     }
                     .pickerStyle(.segmented)

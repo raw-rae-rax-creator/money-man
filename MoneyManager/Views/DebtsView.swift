@@ -26,7 +26,7 @@ struct DebtsView: View {
                 Section {
                     Picker("Status", selection: $selectedFilter) {
                         ForEach(DebtFilter.allCases, id: \.self) { filter in
-                            Text(filter.rawValue).tag(filter)
+                            Text(LocalizedStringKey(filter.rawValue)).tag(filter)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -47,7 +47,7 @@ struct DebtsView: View {
                             HStack {
                                 Text(person.name)
                                 Spacer()
-                                Text(person.balance >= 0 ? "owes you" : "you owe")
+                                Text(person.balance >= 0 ? LocalizedStringKey("owes you") : LocalizedStringKey("you owe"))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Text(abs(person.balance).formattedAsCurrency())
@@ -128,7 +128,7 @@ struct DebtsView: View {
 
                 Spacer()
 
-                Text("Net \(viewModel.netDebt >= 0 ? "+" : "")\(viewModel.netDebt.formattedAsCurrency())")
+                Text("Net \(viewModel.netDebt.signedCurrency)")
                     .fontWeight(.semibold)
                     .foregroundColor(viewModel.netDebt >= 0 ? .orange : .blue)
             }
@@ -267,7 +267,7 @@ struct DebtRowView: View {
                         .lineLimit(1)
 
                     HStack(spacing: 6) {
-                        Text(debt.type == .given ? "Owes me" : "I owe")
+                        Text(debt.type == .given ? LocalizedStringKey("Owes me") : LocalizedStringKey("I owe"))
                             .font(.caption)
                             .foregroundColor(.secondary)
                         statusBadge
@@ -312,7 +312,7 @@ struct DebtRowView: View {
         }
     }
 
-    private func badge(_ text: String, _ color: Color) -> some View {
+    private func badge(_ text: LocalizedStringKey, _ color: Color) -> some View {
         Text(text)
             .font(.caption2.bold())
             .foregroundColor(color)
@@ -379,7 +379,7 @@ struct DebtDetailView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .navigationTitle(debt?.personName ?? "Debt")
+            .navigationTitle(debt?.personName ?? "")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -414,9 +414,15 @@ struct DebtDetailView: View {
         return Form {
             Section {
                 VStack(spacing: 8) {
-                    Text(debt.type == .given ? "\(debt.personName) owes me" : "I owe \(debt.personName)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    Group {
+                        if debt.type == .given {
+                            Text("\(debt.personName) owes me")
+                        } else {
+                            Text("I owe \(debt.personName)")
+                        }
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
                     Text(debt.remainingAmount.formattedAsCurrency())
                         .font(.system(size: 36, weight: .bold, design: .rounded))
                         .foregroundColor(debt.status == .returned ? .green : color)
@@ -439,7 +445,7 @@ struct DebtDetailView: View {
             if debt.status == .active {
                 Section {
                     HStack {
-                        TextField("Amount", text: $repaymentAmount)
+                        TextField("Amount", text: $repaymentAmount.amountFormatted())
                             .keyboardType(.decimalPad)
                             .focused($amountFocused)
                         Text(AppCurrency.symbol)
@@ -502,7 +508,7 @@ struct DebtDetailView: View {
                     row("Due", expected.formatted(date: .long, time: .omitted))
                 }
                 if debt.reminderEnabled {
-                    row("Reminder", "\(debt.reminderDaysBefore) days before")
+                    row("Reminder", "%lld days before".localizedFormat(debt.reminderDaysBefore))
                 }
                 if !debt.note.isEmpty {
                     Text(debt.note)
@@ -527,7 +533,7 @@ struct DebtDetailView: View {
         }
     }
 
-    private func row(_ title: String, _ value: String) -> some View {
+    private func row(_ title: LocalizedStringKey, _ value: String) -> some View {
         HStack {
             Text(title)
             Spacer()
@@ -553,7 +559,7 @@ struct DebtFormView: View {
                     }
                     .pickerStyle(.segmented)
                 } footer: {
-                    Text(viewModel.debtType == .given ? "Someone owes you money." : "You owe someone money.")
+                    Text(viewModel.debtType == .given ? LocalizedStringKey("Someone owes you money.") : LocalizedStringKey("You owe someone money."))
                 }
 
                 Section("Person") {
@@ -581,7 +587,7 @@ struct DebtFormView: View {
 
                 Section("Amount") {
                     HStack {
-                        TextField("0", text: $viewModel.amount)
+                        TextField("0", text: $viewModel.amount.amountFormatted())
                             .keyboardType(.decimalPad)
                             .font(.title2.weight(.semibold))
                         Text(AppCurrency.symbol)
@@ -613,7 +619,7 @@ struct DebtFormView: View {
                     TextField("Notes (optional)", text: $viewModel.note)
                 }
             }
-            .navigationTitle(viewModel.editingDebt != nil ? "Edit Debt" : "New Debt")
+            .navigationTitle(viewModel.editingDebt != nil ? LocalizedStringKey("Edit Debt") : LocalizedStringKey("New Debt"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

@@ -1,0 +1,3 @@
+/* InfoPlist.strings (Russian) */
+"NSFaceIDUsageDescription" = "Face ID используется для разблокировки Money Manager и защиты ваших финансовых данных.";
+"NSLocationWhenInUseUsageDescription" = "Геопозиция сохраняется вместе с новыми операциями, чтобы вы видели, где тратили деньги. Это можно отключить в настройках.";

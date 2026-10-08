@@ -34,7 +34,7 @@ struct GoalsView: View {
             AddAmountView(goal: goal, viewModel: viewModel, amount: $addAmount)
         }
         .confirmationDialog(
-            "Delete \(goalToDelete?.name ?? "goal")?",
+            "Delete \(goalToDelete?.name ?? "")?",
             isPresented: Binding(
                 get: { goalToDelete != nil },
                 set: { if !$0 { goalToDelete = nil } }
@@ -247,14 +247,14 @@ struct GoalFormView: View {
                     TextField("Goal Name", text: $viewModel.goalName)
 
                     HStack {
-                        TextField("Target Amount", text: $viewModel.targetAmount)
+                        TextField("Target Amount", text: $viewModel.targetAmount.amountFormatted())
                             .keyboardType(.decimalPad)
                         Text(AppCurrency.symbol)
                             .foregroundColor(.secondary)
                     }
 
                     HStack {
-                        TextField("Already Saved", text: $viewModel.currentAmount)
+                        TextField("Already Saved", text: $viewModel.currentAmount.amountFormatted())
                             .keyboardType(.decimalPad)
                         Text(AppCurrency.symbol)
                             .foregroundColor(.secondary)
@@ -308,7 +308,7 @@ struct GoalFormView: View {
                     }
                 }
             }
-            .navigationTitle(viewModel.editingGoal != nil ? "Edit Goal" : "New Goal")
+            .navigationTitle(viewModel.editingGoal != nil ? LocalizedStringKey("Edit Goal") : LocalizedStringKey("New Goal"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -348,7 +348,7 @@ struct AddAmountView: View {
             Form {
                 Section {
                     HStack {
-                        TextField("0", text: $amount)
+                        TextField("0", text: $amount.amountFormatted())
                             .keyboardType(.decimalPad)
                             .font(.title2)
                             .focused($focused)

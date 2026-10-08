@@ -3,30 +3,53 @@ import SwiftUI
 /// Pushed from the "More" tab, so it relies on the parent NavigationView.
 struct CategoryListView: View {
     @StateObject private var viewModel = CategoryViewModel()
+    @State private var editMode: EditMode = .inactive
 
     var body: some View {
         List {
-            Section("Expense Categories") {
+            Section {
                 ForEach(viewModel.expenseCategories) { category in
                     categoryRow(category)
                 }
+                .onMove { source, destination in
+                    viewModel.moveCategories(type: .expense, from: source, to: destination)
+                }
+            } header: {
+                sectionHeader("Expense Categories", type: .expense)
             }
 
-            Section("Income Categories") {
+            Section {
                 ForEach(viewModel.incomeCategories) { category in
                     categoryRow(category)
                 }
+                .onMove { source, destination in
+                    viewModel.moveCategories(type: .income, from: source, to: destination)
+                }
+            } header: {
+                sectionHeader("Income Categories", type: .income)
+            } footer: {
+                Text("Tap Edit and drag categories to reorder them. Categories at the top are shown first when you add a transaction.")
             }
         }
         .listStyle(.insetGrouped)
+        .environment(\.editMode, $editMode)
         .navigationTitle("Categories")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    viewModel.prepareNew()
-                    viewModel.showAddSheet = true
-                }) {
-                    Image(systemName: "plus")
+                HStack(spacing: 16) {
+                    Button(editMode.isEditing ? LocalizedStringKey("Done") : LocalizedStringKey("Edit")) {
+                        withAnimation {
+                            editMode = editMode.isEditing ? .inactive : .active
+                        }
+                    }
+
+                    Button(action: {
+                        viewModel.prepareNew()
+                        viewModel.showAddSheet = true
+                    }) {
+                        Image(systemName: "plus")
+                    }
+                    .disabled(editMode.isEditing)
                 }
             }
         }
@@ -41,11 +64,30 @@ struct CategoryListView: View {
         }
     }
 
+    private func sectionHeader(_ title: LocalizedStringKey, type: CategoryType) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Menu {
+                Button {
+                    withAnimation { viewModel.sortByUsage(type: type) }
+                } label: {
+                    Label("Sort by usage", systemImage: "chart.bar.xaxis")
+                }
+            } label: {
+                Image(systemName: "arrow.up.arrow.down")
+                    .font(.footnote.weight(.semibold))
+            }
+        }
+    }
+
     private func categoryRow(_ category: Category) -> some View {
         Button {
-            viewModel.editCategory(category)
+            if !editMode.isEditing {
+                viewModel.editCategory(category)
+            }
         } label: {
-            CategoryRowView(category: category)
+            CategoryRowView(category: category, showsChevron: !editMode.isEditing)
         }
         .buttonStyle(.plain)
         .swipeActions {
@@ -62,18 +104,15 @@ struct CategoryListView: View {
 
 struct CategoryRowView: View {
     let category: Category
+    var showsChevron: Bool = true
 
     var body: some View {
-        HStack {
-            Image(systemName: category.icon)
-                .foregroundColor(Color(hex: category.color))
-                .font(.title3)
-                .frame(width: 36, height: 36)
-                .background(Color(hex: category.color).opacity(0.15))
-                .clipShape(Circle())
+        HStack(spacing: 12) {
+            CategoryIconView(category: category, size: 36)
+                .frame(width: 36)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(category.name)
+                Text(category.displayName)
                     .font(.body)
 
                 if let budget = category.budgetLimit {
@@ -85,9 +124,11 @@ struct CategoryRowView: View {
 
             Spacer()
 
-            Image(systemName: "chevron.right")
-                .foregroundColor(Color(.tertiaryLabel))
-                .font(.caption.weight(.semibold))
+            if showsChevron {
+                Image(systemName: "chevron.right")
+                    .foregroundColor(Color(.tertiaryLabel))
+                    .font(.caption.weight(.semibold))
+            }
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
@@ -167,7 +208,7 @@ struct CategoryFormView: View {
                 if viewModel.categoryType == .expense {
                     Section {
                         HStack {
-                            TextField("Monthly limit", text: $viewModel.budgetLimit)
+                            TextField("Monthly limit", text: $viewModel.budgetLimit.amountFormatted())
                                 .keyboardType(.decimalPad)
                             Text(AppCurrency.symbol)
                                 .foregroundColor(.secondary)
@@ -177,7 +218,7 @@ struct CategoryFormView: View {
                     }
                 }
             }
-            .navigationTitle(viewModel.editingCategory != nil ? "Edit Category" : "New Category")
+            .navigationTitle(viewModel.editingCategory != nil ? LocalizedStringKey("Edit Category") : LocalizedStringKey("New Category"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

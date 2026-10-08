@@ -20,6 +20,11 @@ class AddTransactionViewModel: ObservableObject {
     @Published var errorMessage: String = ""
     @Published var isSaving: Bool = false
 
+    @Published var latitude: Double?
+    @Published var longitude: Double?
+    @Published var placeName: String?
+    @Published var isLocating: Bool = false
+
     let editingTransaction: Transaction?
     private let database = DatabaseService.shared
 
@@ -35,7 +40,35 @@ class AddTransactionViewModel: ObservableObject {
             isRecurring = transaction.isRecurring
             recurringFrequency = transaction.recurringFrequency ?? .monthly
             tags = transaction.tags
+            latitude = transaction.latitude
+            longitude = transaction.longitude
+            placeName = transaction.placeName
         }
+    }
+
+    var hasLocation: Bool {
+        latitude != nil && longitude != nil
+    }
+
+    /// Tags a new transaction with the current location when the setting is on.
+    func captureLocationIfNeeded() async {
+        guard !isEditing,
+              !hasLocation,
+              UserDefaults.standard.bool(forKey: AppPreferences.saveLocationKey) else { return }
+
+        isLocating = true
+        defer { isLocating = false }
+
+        guard let location = await LocationService.shared.currentLocation() else { return }
+        latitude = location.coordinate.latitude
+        longitude = location.coordinate.longitude
+        placeName = await LocationService.shared.placeName(for: location)
+    }
+
+    func removeLocation() {
+        latitude = nil
+        longitude = nil
+        placeName = nil
     }
 
     func loadData() async {
@@ -97,6 +130,9 @@ class AddTransactionViewModel: ObservableObject {
                 transaction.isRecurring = isRecurring
                 transaction.recurringFrequency = isRecurring ? recurringFrequency : nil
                 transaction.tags = tags
+                transaction.latitude = latitude
+                transaction.longitude = longitude
+                transaction.placeName = placeName
                 try database.updateTransaction(transaction)
             } else {
                 let transaction = Transaction(
@@ -108,7 +144,10 @@ class AddTransactionViewModel: ObservableObject {
                     date: date,
                     isRecurring: isRecurring,
                     recurringFrequency: isRecurring ? recurringFrequency : nil,
-                    tags: tags
+                    tags: tags,
+                    latitude: latitude,
+                    longitude: longitude,
+                    placeName: placeName
                 )
                 try database.createTransaction(transaction)
             }
@@ -137,17 +176,17 @@ class AddTransactionViewModel: ObservableObject {
 
     private func validate() -> Bool {
         guard let amountValue = AppCurrency.parseAmount(amount), amountValue > 0 else {
-            errorMessage = "Please enter a valid amount"
+            errorMessage = "Please enter a valid amount".localized
             return false
         }
 
         guard selectedCategory != nil else {
-            errorMessage = "Please select a category"
+            errorMessage = "Please select a category".localized
             return false
         }
 
         guard selectedAccount != nil else {
-            errorMessage = "Please select an account"
+            errorMessage = "Please select an account".localized
             return false
         }
 

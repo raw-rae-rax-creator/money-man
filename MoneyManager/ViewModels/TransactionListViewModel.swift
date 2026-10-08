@@ -63,7 +63,7 @@ class TransactionListViewModel: ObservableObject {
             filteredTransactions = filteredTransactions.filter { transaction in
                 transaction.note.localizedCaseInsensitiveContains(query) ||
                 transaction.tags.contains { $0.localizedCaseInsensitiveContains(query) } ||
-                (categoriesById[transaction.categoryId]?.name.localizedCaseInsensitiveContains(query) ?? false)
+                (categoriesById[transaction.categoryId]?.displayName.localizedCaseInsensitiveContains(query) ?? false)
             }
         }
     }

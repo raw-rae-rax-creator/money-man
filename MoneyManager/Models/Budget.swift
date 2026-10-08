@@ -5,6 +5,14 @@ enum BudgetPeriod: String, Codable, CaseIterable {
     case monthly = "monthly"
     case yearly = "yearly"
 
+    var title: String {
+        switch self {
+        case .weekly: return "Weekly".localized
+        case .monthly: return "Monthly".localized
+        case .yearly: return "Yearly".localized
+        }
+    }
+
     var calendarComponent: Calendar.Component {
         switch self {
         case .weekly: return .weekOfYear

@@ -24,11 +24,11 @@ struct TransactionListView: View {
                     Menu {
                         Picker("Date Range", selection: $viewModel.dateRange) {
                             ForEach(TransactionListViewModel.DateRange.allCases, id: \.self) { range in
-                                Text(range.rawValue).tag(range)
+                                Text(LocalizedStringKey(range.rawValue)).tag(range)
                             }
                         }
                     } label: {
-                        Label(viewModel.dateRange.rawValue, systemImage: "calendar")
+                        Label(LocalizedStringKey(viewModel.dateRange.rawValue), systemImage: "calendar")
                     }
                 }
 
@@ -58,7 +58,7 @@ struct TransactionListView: View {
         VStack(spacing: 10) {
             Picker("Filter", selection: $viewModel.selectedFilter) {
                 ForEach(TransactionListViewModel.TransactionFilter.allCases, id: \.self) { filter in
-                    Text(filter.rawValue).tag(filter)
+                    Text(LocalizedStringKey(filter.rawValue)).tag(filter)
                 }
             }
             .pickerStyle(.segmented)
@@ -99,7 +99,7 @@ struct TransactionListView: View {
         .padding()
     }
 
-    private func summaryItem(_ title: String, _ amount: Double, _ color: Color, alignment: HorizontalAlignment) -> some View {
+    private func summaryItem(_ title: LocalizedStringKey, _ amount: Double, _ color: Color, alignment: HorizontalAlignment) -> some View {
         VStack(alignment: alignment, spacing: 4) {
             Text(title)
                 .font(.caption)
@@ -160,8 +160,8 @@ struct TransactionListView: View {
 
     private func dayTitle(_ day: Date) -> String {
         let calendar = Calendar.current
-        if calendar.isDateInToday(day) { return "Today" }
-        if calendar.isDateInYesterday(day) { return "Yesterday" }
+        if calendar.isDateInToday(day) { return "Today".localized }
+        if calendar.isDateInYesterday(day) { return "Yesterday".localized }
         return day.formatted(.dateTime.weekday(.wide).day().month(.wide))
     }
 

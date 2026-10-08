@@ -48,7 +48,7 @@ class AccountViewModel: ObservableObject {
 
     func edit(_ account: Account) {
         editingAccount = account
-        name = account.name
+        name = account.displayName
         type = account.type
         balance = AppCurrency.editString(account.balance)
         color = account.color

@@ -47,7 +47,7 @@ struct ReportsView: View {
     private var periodPicker: some View {
         Picker("Period", selection: $selectedPeriod) {
             ForEach(ReportPeriod.allCases, id: \.self) { period in
-                Text(period.rawValue).tag(period)
+                Text(LocalizedStringKey(period.rawValue)).tag(period)
             }
         }
         .pickerStyle(.segmented)
@@ -95,7 +95,8 @@ struct ReportsView: View {
                     .font(.headline)
                 Spacer()
                 if average > 0 {
-                    Text("avg \(average.formattedAsCurrency()) / \(selectedPeriod == .week || selectedPeriod == .month ? "day" : "month")")
+                    let unit = selectedPeriod == .week || selectedPeriod == .month ? "day".localized : "month".localized
+                    Text("avg \(average.formattedAsCurrency()) / \(unit)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -154,11 +155,10 @@ struct ReportsView: View {
                                 .foregroundColor(.secondary)
                                 .frame(width: 18)
 
-                            Image(systemName: item.category.icon)
-                                .foregroundColor(Color(hex: item.category.color))
+                            CategoryIconView(category: item.category, size: 24)
                                 .frame(width: 24)
 
-                            Text(item.category.name)
+                            Text(item.category.displayName)
                                 .font(.subheadline)
 
                             Spacer()
@@ -288,7 +288,7 @@ struct ReportsView: View {
 }
 
 struct SummaryCard: View {
-    let title: String
+    let title: LocalizedStringKey
     let amount: Double
     let icon: String
     let color: Color

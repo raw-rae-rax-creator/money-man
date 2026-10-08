@@ -20,7 +20,7 @@ class ImportExportService {
         let accounts = try database.fetchAccounts()
         let dateFormatter = ISO8601DateFormatter()
 
-        var csvString = "Date,Type,Amount,Category,Account,Note,Tags\n"
+        var csvString = "Date,Type,Amount,Category,Account,Note,Tags,Latitude,Longitude,Place\n"
 
         for transaction in transactions {
             let category = categories.first { $0.id == transaction.categoryId }?.name ?? "Unknown"
@@ -32,7 +32,10 @@ class ImportExportService {
                 category,
                 account,
                 transaction.note,
-                transaction.tags.joined(separator: ";")
+                transaction.tags.joined(separator: ";"),
+                transaction.latitude.map { String($0) } ?? "",
+                transaction.longitude.map { String($0) } ?? "",
+                transaction.placeName ?? ""
             ]
             csvString += fields.map(csvEscape).joined(separator: ",") + "\n"
         }
@@ -173,7 +176,10 @@ class ImportExportService {
                 accountId: accountId,
                 note: note,
                 date: date,
-                tags: tags
+                tags: tags,
+                latitude: columns.count > 8 ? Double(columns[7]) : nil,
+                longitude: columns.count > 8 ? Double(columns[8]) : nil,
+                placeName: columns.count > 9 && !columns[9].isEmpty ? columns[9] : nil
             )
 
             try database.createTransaction(transaction)
@@ -303,9 +309,9 @@ enum ImportError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidFormat: return "The file format is not supported."
-        case .fileNotFound: return "The file could not be found."
-        case .parsingError: return "The file could not be read."
+        case .invalidFormat: return "The file format is not supported.".localized
+        case .fileNotFound: return "The file could not be found.".localized
+        case .parsingError: return "The file could not be read.".localized
         }
     }
 }

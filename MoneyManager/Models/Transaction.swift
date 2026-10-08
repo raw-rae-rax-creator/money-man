@@ -19,6 +19,14 @@ struct Transaction: Identifiable, Codable {
     var tags: [String]
     var createdAt: Date
     var updatedAt: Date
+    // Where the transaction was added (only when the location setting is on).
+    var latitude: Double?
+    var longitude: Double?
+    var placeName: String?
+
+    var hasLocation: Bool {
+        latitude != nil && longitude != nil
+    }
 
     init(
         id: UUID = UUID(),
@@ -30,7 +38,10 @@ struct Transaction: Identifiable, Codable {
         date: Date = Date(),
         isRecurring: Bool = false,
         recurringFrequency: RecurringFrequency? = nil,
-        tags: [String] = []
+        tags: [String] = [],
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        placeName: String? = nil
     ) {
         self.id = id
         self.amount = amount
@@ -42,6 +53,9 @@ struct Transaction: Identifiable, Codable {
         self.isRecurring = isRecurring
         self.recurringFrequency = recurringFrequency
         self.tags = tags
+        self.latitude = latitude
+        self.longitude = longitude
+        self.placeName = placeName
         self.createdAt = Date()
         self.updatedAt = Date()
     }
@@ -53,6 +67,16 @@ enum RecurringFrequency: String, Codable, CaseIterable {
     case biweekly = "biweekly"
     case monthly = "monthly"
     case yearly = "yearly"
+
+    var title: String {
+        switch self {
+        case .daily: return "Daily".localized
+        case .weekly: return "Weekly".localized
+        case .biweekly: return "Every 2 weeks".localized
+        case .monthly: return "Monthly".localized
+        case .yearly: return "Yearly".localized
+        }
+    }
 
     var dateComponent: DateComponents {
         switch self {

@@ -15,6 +15,9 @@ public class TransactionEntity: NSManagedObject {
     @NSManaged public var tags: String
     @NSManaged public var createdAt: Date
     @NSManaged public var updatedAt: Date
+    @NSManaged public var latitude: NSNumber?
+    @NSManaged public var longitude: NSNumber?
+    @NSManaged public var placeName: String?
 
     func toTransaction() -> Transaction? {
         guard let type = TransactionType(rawValue: type) else { return nil }
@@ -31,7 +34,10 @@ public class TransactionEntity: NSManagedObject {
             date: date,
             isRecurring: isRecurring,
             recurringFrequency: frequency,
-            tags: tagsArray
+            tags: tagsArray,
+            latitude: latitude?.doubleValue,
+            longitude: longitude?.doubleValue,
+            placeName: placeName
         )
     }
 }

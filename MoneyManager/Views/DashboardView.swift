@@ -78,7 +78,7 @@ struct DashboardView: View {
             HStack {
                 Text(Date(), format: .dateTime.month(.wide).year())
                 Spacer()
-                Text("Net \(netAmount >= 0 ? "+" : "")\(netAmount.formattedAsCurrency())")
+                Text("Net \(netAmount.signedCurrency)")
                     .fontWeight(.semibold)
             }
             .font(.caption)
@@ -96,7 +96,7 @@ struct DashboardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
-    private func summaryItem(title: String, amount: Double, icon: String) -> some View {
+    private func summaryItem(title: LocalizedStringKey, amount: Double, icon: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Label(title, systemImage: icon)
                 .font(.caption)
@@ -114,7 +114,7 @@ struct DashboardView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Image(systemName: account.icon)
                             .foregroundColor(Color(hex: account.color))
-                        Text(account.name)
+                        Text(account.displayName)
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
@@ -236,11 +236,10 @@ struct DashboardView: View {
                 ForEach(viewModel.categoryBreakdown.prefix(5), id: \.category.id) { item in
                     VStack(spacing: 6) {
                         HStack {
-                            Image(systemName: item.category.icon)
-                                .foregroundColor(Color(hex: item.category.color))
+                            CategoryIconView(category: item.category, size: 28)
                                 .frame(width: 28)
 
-                            Text(item.category.name)
+                            Text(item.category.displayName)
                                 .font(.subheadline)
 
                             Spacer()

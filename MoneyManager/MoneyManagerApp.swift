@@ -20,7 +20,12 @@ struct MoneyManagerApp: App {
                 }
             }
             .environmentObject(securityManager)
-            .preferredColorScheme(AppTheme(rawValue: themeRaw)?.colorScheme)
+            .onAppear {
+                ThemeManager.apply(AppTheme(rawValue: themeRaw) ?? .system)
+            }
+            .onChange(of: themeRaw) { newValue in
+                ThemeManager.apply(AppTheme(rawValue: newValue) ?? .system)
+            }
         }
         .onChange(of: scenePhase) { phase in
             if phase == .background {

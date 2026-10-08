@@ -17,21 +17,24 @@ class DatabaseService {
             "Core Data model 'MoneyManagerModel' not found. Add MoneyManagerModel.xcdatamodeld to the target's Compile Sources build phase."
         )
 
+        // Schema changes ship as new model versions (MoneyManagerModel_v2, ...) and are
+        // migrated automatically, keeping the user's data.
+        for description in container.persistentStoreDescriptions {
+            description.shouldMigrateStoreAutomatically = true
+            description.shouldInferMappingModelAutomatically = true
+        }
+
         var loadError: Error?
         container.loadPersistentStores { _, error in
             loadError = error
         }
 
         if let loadError = loadError {
-            // Builds before the schema fix marked nullable attributes as required, so
-            // nothing could be saved and the old store can't be migrated. Start fresh.
-            print("Core Data failed to load, recreating store: \(loadError.localizedDescription)")
+            // Never delete user data: move the unreadable store aside so it can be
+            // recovered, then start with an empty one.
+            print("Core Data failed to load, moving store aside: \(loadError)")
             if let url = container.persistentStoreDescriptions.first?.url {
-                try? container.persistentStoreCoordinator.destroyPersistentStore(
-                    at: url,
-                    ofType: NSSQLiteStoreType,
-                    options: nil
-                )
+                Self.moveStoreAside(at: url)
             }
             container.loadPersistentStores { _, error in
                 if let error = error {
@@ -42,6 +45,18 @@ class DatabaseService {
 
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+    }
+
+    private static func moveStoreAside(at url: URL) {
+        let fileManager = FileManager.default
+        let stamp = Int(Date().timeIntervalSince1970)
+        for suffix in ["", "-wal", "-shm"] {
+            let source = URL(fileURLWithPath: url.path + suffix)
+            let backup = URL(fileURLWithPath: url.path + ".unreadable-\(stamp)" + suffix)
+            if fileManager.fileExists(atPath: source.path) {
+                try? fileManager.moveItem(at: source, to: backup)
+            }
+        }
     }
 
     var context: NSManagedObjectContext {
@@ -124,6 +139,9 @@ class DatabaseService {
         entity.tags = transaction.tags.joined(separator: ",")
         entity.createdAt = transaction.createdAt
         entity.updatedAt = transaction.updatedAt
+        entity.latitude = transaction.latitude.map { NSNumber(value: $0) }
+        entity.longitude = transaction.longitude.map { NSNumber(value: $0) }
+        entity.placeName = transaction.placeName
 
         if adjustBalance {
             try self.adjustBalance(
@@ -186,6 +204,9 @@ class DatabaseService {
         entity.isRecurring = transaction.isRecurring
         entity.recurringFrequency = transaction.recurringFrequency?.rawValue
         entity.tags = transaction.tags.joined(separator: ",")
+        entity.latitude = transaction.latitude.map { NSNumber(value: $0) }
+        entity.longitude = transaction.longitude.map { NSNumber(value: $0) }
+        entity.placeName = transaction.placeName
         entity.updatedAt = Date()
         try saveContext()
     }
@@ -248,6 +269,27 @@ class DatabaseService {
         entity.isActive = category.isActive
         entity.sortOrder = Int16(category.sortOrder)
         try saveContext()
+    }
+
+    /// Saves a user-defined order: categories earlier in `ids` show up first when picking.
+    func updateCategoryOrder(_ ids: [UUID]) throws {
+        let request: NSFetchRequest<CategoryEntity> = CategoryEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id IN %@", ids as NSArray)
+        let entities = try context.fetch(request)
+
+        for (index, id) in ids.enumerated() {
+            entities.first { $0.id == id }?.sortOrder = Int16(clamping: index + 1)
+        }
+        try saveContext()
+    }
+
+    /// Number of transactions per category, used for "sort by usage".
+    func categoryUsageCounts() throws -> [UUID: Int] {
+        var counts: [UUID: Int] = [:]
+        for transaction in try fetchTransactions() {
+            counts[transaction.categoryId, default: 0] += 1
+        }
+        return counts
     }
 
     func deleteCategory(id: UUID) throws {

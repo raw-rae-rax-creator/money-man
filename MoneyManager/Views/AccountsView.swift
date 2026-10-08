@@ -58,7 +58,7 @@ struct AccountsView: View {
             AccountFormView(viewModel: viewModel)
         }
         .confirmationDialog(
-            "Delete \(accountToDelete?.name ?? "account")?",
+            "Delete \(accountToDelete?.displayName ?? "")?",
             isPresented: Binding(
                 get: { accountToDelete != nil },
                 set: { if !$0 { accountToDelete = nil } }
@@ -93,9 +93,9 @@ struct AccountRowView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(account.name)
+                Text(account.displayName)
                     .font(.body)
-                Text(account.includeInTotal ? account.type.displayName : "\(account.type.displayName) · not in total")
+                Text(account.includeInTotal ? account.type.displayName : "%@ · not in total".localizedFormat(account.type.displayName))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -140,13 +140,13 @@ struct AccountFormView: View {
 
                 Section {
                     HStack {
-                        TextField("0", text: $viewModel.balance)
+                        TextField("0", text: $viewModel.balance.amountFormatted(allowsNegative: true))
                             .keyboardType(.numbersAndPunctuation)
                         Text(AppCurrency.symbol)
                             .foregroundColor(.secondary)
                     }
                 } header: {
-                    Text(viewModel.editingAccount == nil ? "Starting Balance" : "Balance")
+                    Text(viewModel.editingAccount == nil ? LocalizedStringKey("Starting Balance") : LocalizedStringKey("Balance"))
                 } footer: {
                     Text("Use a minus sign for credit card debt.")
                 }
@@ -178,7 +178,7 @@ struct AccountFormView: View {
                     Toggle("Include in Total Balance", isOn: $viewModel.includeInTotal)
                 }
             }
-            .navigationTitle(viewModel.editingAccount == nil ? "New Account" : "Edit Account")
+            .navigationTitle(viewModel.editingAccount == nil ? LocalizedStringKey("New Account") : LocalizedStringKey("Edit Account"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

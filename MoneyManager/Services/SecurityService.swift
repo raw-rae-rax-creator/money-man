@@ -9,7 +9,7 @@ class SecurityService {
 
     // MARK: - Biometric Authentication
 
-    func authenticateWithBiometrics(reason: String = "Authenticate to access Money Manager") async -> Bool {
+    func authenticateWithBiometrics(reason: String = "Authenticate to access Money Manager".localized) async -> Bool {
         let context = LAContext()
         var error: NSError?
 
@@ -30,7 +30,7 @@ class SecurityService {
     }
 
     /// Face ID / Touch ID with the device passcode as a fallback, so the user can't get locked out.
-    func authenticateDeviceOwner(reason: String = "Unlock Money Manager") async -> Bool {
+    func authenticateDeviceOwner(reason: String = "Unlock Money Manager".localized) async -> Bool {
         let context = LAContext()
         var error: NSError?
 

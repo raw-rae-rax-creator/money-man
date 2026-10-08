@@ -22,13 +22,14 @@ struct AddTransactionView: View {
                 categorySection
                 accountSection
                 detailsSection
+                locationSection
                 tagsSection
                 recurringSection
                 if viewModel.isEditing {
                     deleteSection
                 }
             }
-            .navigationTitle(viewModel.isEditing ? "Edit Transaction" : "New Transaction")
+            .navigationTitle(viewModel.isEditing ? LocalizedStringKey("Edit Transaction") : LocalizedStringKey("New Transaction"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -91,6 +92,7 @@ struct AddTransactionView: View {
             if !viewModel.isEditing {
                 amountFocused = true
             }
+            await viewModel.captureLocationIfNeeded()
         }
     }
 
@@ -110,7 +112,7 @@ struct AddTransactionView: View {
     private var amountSection: some View {
         Section("Amount") {
             HStack {
-                TextField("0", text: $viewModel.amount)
+                TextField("0", text: $viewModel.amount.amountFormatted())
                     .keyboardType(.decimalPad)
                     .font(.system(size: 34, weight: .bold, design: .rounded))
                     .foregroundColor(viewModel.type == .income ? .green : .primary)
@@ -124,24 +126,9 @@ struct AddTransactionView: View {
 
     private var categorySection: some View {
         Section("Category") {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: 12) {
-                    ForEach(viewModel.categories) { category in
-                        CategoryChip(
-                            category: category,
-                            isSelected: viewModel.selectedCategory?.id == category.id
-                        ) {
-                            Haptics.tap()
-                            viewModel.selectedCategory = category
-                        }
-                    }
-
-                    NewItemChip(title: "New") {
-                        categoryViewModel.prepareNew(type: viewModel.type == .income ? .income : .expense)
-                        showNewCategory = true
-                    }
-                }
-                .padding(.vertical, 4)
+            CategoryPicker(categories: viewModel.categories, selection: $viewModel.selectedCategory) {
+                categoryViewModel.prepareNew(type: viewModel.type == .income ? .income : .expense)
+                showNewCategory = true
             }
         }
     }
@@ -158,7 +145,7 @@ struct AddTransactionView: View {
             } else {
                 Picker("Account", selection: $viewModel.selectedAccount) {
                     ForEach(viewModel.accounts) { account in
-                        Label(account.name, systemImage: account.icon)
+                        Label(account.displayName, systemImage: account.icon)
                             .tag(Optional(account))
                     }
                 }
@@ -183,6 +170,41 @@ struct AddTransactionView: View {
         }
     }
 
+    @ViewBuilder
+    private var locationSection: some View {
+        if viewModel.isLocating || viewModel.hasLocation {
+            Section("Location") {
+                if let latitude = viewModel.latitude, let longitude = viewModel.longitude {
+                    LocationMapPreview(latitude: latitude, longitude: longitude)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
+
+                    if let placeName = viewModel.placeName {
+                        Label(placeName, systemImage: "mappin.and.ellipse")
+                            .font(.subheadline)
+                    }
+
+                    if let url = LocationMapPreview.mapsURL(latitude: latitude, longitude: longitude) {
+                        Link(destination: url) {
+                            Label("Open in Maps", systemImage: "map")
+                        }
+                    }
+
+                    Button(role: .destructive) {
+                        viewModel.removeLocation()
+                    } label: {
+                        Label("Remove Location", systemImage: "location.slash")
+                    }
+                } else {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                        Text("Determining location…")
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+    }
+
     private var tagsSection: some View {
         Section("Tags") {
             HStack {
@@ -201,7 +223,7 @@ struct AddTransactionView: View {
                     HStack(spacing: 8) {
                         ForEach(viewModel.tags, id: \.self) { tag in
                             HStack(spacing: 4) {
-                                Text("#\(tag)")
+                                Text(verbatim: "#\(tag)")
                                     .font(.caption)
                                 Button(action: { viewModel.removeTag(tag) }) {
                                     Image(systemName: "xmark.circle.fill")
@@ -227,7 +249,7 @@ struct AddTransactionView: View {
             if viewModel.isRecurring {
                 Picker("Frequency", selection: $viewModel.recurringFrequency) {
                     ForEach(RecurringFrequency.allCases, id: \.self) { freq in
-                        Text(freq.rawValue.capitalized).tag(freq)
+                        Text(freq.title).tag(freq)
                     }
                 }
                 .pickerStyle(.menu)
@@ -243,59 +265,6 @@ struct AddTransactionView: View {
                 Label("Delete Transaction", systemImage: "trash")
             }
         }
-    }
-}
-
-struct CategoryChip: View {
-    let category: Category
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 6) {
-                Image(systemName: category.icon)
-                    .font(.title3)
-                    .foregroundColor(isSelected ? .white : Color(hex: category.color))
-                    .frame(width: 50, height: 50)
-                    .background(isSelected ? Color(hex: category.color) : Color(hex: category.color).opacity(0.15))
-                    .clipShape(Circle())
-
-                Text(category.name)
-                    .font(.caption2)
-                    .foregroundColor(isSelected ? .primary : .secondary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(width: 70)
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-struct NewItemChip: View {
-    let title: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 6) {
-                Image(systemName: "plus")
-                    .font(.title3.weight(.semibold))
-                    .foregroundColor(.accentColor)
-                    .frame(width: 50, height: 50)
-                    .overlay(
-                        Circle()
-                            .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 1.5, dash: [4]))
-                    )
-
-                Text(title)
-                    .font(.caption2)
-                    .foregroundColor(.accentColor)
-            }
-            .frame(width: 70)
-        }
-        .buttonStyle(.plain)
     }
 }
 

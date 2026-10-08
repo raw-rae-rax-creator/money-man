@@ -1,0 +1,368 @@
+/*
+  Localizable.strings (Russian)
+  Keys are the English strings used in code. SwiftUI interpolations become
+  %@ (String) and %lld (Int) in keys.
+*/
+
+/* MARK: - Tabs & navigation */
+"Overview" = "Обзор";
+"Transactions" = "Операции";
+"Debts" = "Долги";
+"Reports" = "Отчёты";
+"More" = "Ещё";
+"Less" = "Свернуть";
+
+/* MARK: - Common */
+"Cancel" = "Отмена";
+"Save" = "Сохранить";
+"Done" = "Готово";
+"Edit" = "Изменить";
+"Delete" = "Удалить";
+"OK" = "OK";
+"Error" = "Ошибка";
+"Add" = "Добавить";
+"New" = "Новая";
+"All" = "Все";
+"Name" = "Имя";
+"Amount" = "Сумма";
+"Date" = "Дата";
+"Type" = "Тип";
+"Details" = "Подробности";
+"Notes" = "Заметки";
+"Notes (optional)" = "Заметка (необязательно)";
+"Note (optional)" = "Заметка (необязательно)";
+"Color" = "Цвет";
+"Icon" = "Иконка";
+"Total" = "Итого";
+"Period" = "Период";
+"Status" = "Статус";
+"Filter" = "Фильтр";
+"Delete %@?" = "Удалить «%@»?";
+"Money Manager" = "Money Manager";
+"Uncategorized" = "Без категории";
+"Today" = "Сегодня";
+"Yesterday" = "Вчера";
+"today" = "сегодня";
+"day" = "день";
+"month" = "месяц";
+
+/* MARK: - Transaction types & filters */
+"Income" = "Доходы";
+"Expense" = "Расходы";
+"Expenses" = "Расходы";
+"Net" = "Итого";
+"Net %@" = "Итого %@";
+"This Week" = "Эта неделя";
+"This Month" = "Этот месяц";
+"This Year" = "Этот год";
+"All Time" = "Всё время";
+"Date Range" = "Период";
+"Week" = "Неделя";
+"Month" = "Месяц";
+"Year" = "Год";
+
+/* MARK: - Overview */
+"Total Balance" = "Общий баланс";
+"Recent Transactions" = "Последние операции";
+"See All" = "Все";
+"No transactions yet" = "Операций пока нет";
+"Add your first transaction" = "Добавить первую операцию";
+"Top Categories This Month" = "Топ категорий за месяц";
+"No expenses this month" = "В этом месяце расходов нет";
+"No active debts" = "Активных долгов нет";
+"Owed to me" = "Мне должны";
+"I owe" = "Я должен";
+"%lld overdue" = "просрочено: %lld";
+"Not included in balance or statistics" = "Не входят в баланс и статистику";
+
+/* MARK: - Transactions list */
+"No transactions found" = "Операции не найдены";
+"Add Transaction" = "Добавить операцию";
+"Search notes, tags, categories" = "Поиск по заметкам, тегам, категориям";
+
+/* MARK: - Transaction form */
+"New Transaction" = "Новая операция";
+"Edit Transaction" = "Изменить операцию";
+"Category" = "Категория";
+"Account" = "Счёт";
+"Create an account" = "Создать счёт";
+"New account" = "Новый счёт";
+"Tags" = "Теги";
+"Add tag" = "Добавить тег";
+"Recurring" = "Повтор";
+"Recurring Transaction" = "Регулярная операция";
+"Frequency" = "Частота";
+"Delete Transaction" = "Удалить операцию";
+"Delete this transaction?" = "Удалить эту операцию?";
+"The account balance will be adjusted." = "Баланс счёта будет пересчитан.";
+"Please enter a valid amount" = "Введите корректную сумму";
+"Please select a category" = "Выберите категорию";
+"Please select an account" = "Выберите счёт";
+"Location" = "Местоположение";
+"Determining location…" = "Определяем местоположение…";
+"Open in Maps" = "Открыть в Картах";
+"Remove Location" = "Удалить местоположение";
+
+/* MARK: - Recurrence */
+"Daily" = "Ежедневно";
+"Weekly" = "Еженедельно";
+"Every 2 weeks" = "Раз в 2 недели";
+"Monthly" = "Ежемесячно";
+"Quarterly" = "Ежеквартально";
+"Yearly" = "Ежегодно";
+
+/* MARK: - Categories */
+"Categories" = "Категории";
+"Expense Categories" = "Категории расходов";
+"Income Categories" = "Категории доходов";
+"New Category" = "Новая категория";
+"Edit Category" = "Изменить категорию";
+"Category Name" = "Название категории";
+"Budget (Optional)" = "Бюджет (необязательно)";
+"Monthly limit" = "Лимит в месяц";
+"Budget: %@" = "Бюджет: %@";
+"Sort by usage" = "Сортировать по частоте";
+"Tap Edit and drag categories to reorder them. Categories at the top are shown first when you add a transaction." = "Нажмите «Изменить» и перетащите категории, чтобы поменять порядок. Верхние категории показываются первыми при добавлении операции.";
+
+/* Default categories (stored in English, translated on display) */
+"Food & Dining" = "Еда и рестораны";
+"Transportation" = "Транспорт";
+"Shopping" = "Покупки";
+"Entertainment" = "Развлечения";
+"Bills & Utilities" = "Счета и ЖКХ";
+"Healthcare" = "Здоровье";
+"Education" = "Образование";
+"Travel" = "Путешествия";
+"Other" = "Другое";
+"Salary" = "Зарплата";
+"Business" = "Бизнес";
+"Investments" = "Инвестиции";
+"Gifts" = "Подарки";
+"Other Income" = "Прочие доходы";
+
+/* MARK: - Accounts */
+"Accounts" = "Счета";
+"Cash" = "Наличные";
+"Bank Account" = "Банковский счёт";
+"Credit Card" = "Кредитная карта";
+"Savings" = "Сбережения";
+"Investment" = "Инвестиции";
+"New Account" = "Новый счёт";
+"Edit Account" = "Изменить счёт";
+"Account Name" = "Название счёта";
+"Starting Balance" = "Начальный баланс";
+"Balance" = "Баланс";
+"Use a minus sign for credit card debt." = "Для долга по кредитке используйте знак минус.";
+"Include in Total Balance" = "Учитывать в общем балансе";
+"No accounts yet" = "Счетов пока нет";
+"Debts are tracked separately and are not included here." = "Долги учитываются отдельно и сюда не входят.";
+"Existing transactions are kept." = "Существующие операции сохранятся.";
+"%@ · not in total" = "%@ · не в итоге";
+
+/* MARK: - Debts */
+"Owes me" = "Должен мне";
+"owes you" = "должен вам";
+"you owe" = "вы должны";
+"%@ owes me" = "%@ должен мне";
+"I owe %@" = "Я должен: %@";
+"%lld active" = "активных: %lld";
+"Debts don't affect your balance or income/expense statistics." = "Долги не влияют на баланс и статистику доходов и расходов.";
+"Active" = "Активные";
+"Overdue" = "Просрочены";
+"Returned" = "Возвращены";
+"Due soon" = "Скоро срок";
+"By Person" = "По людям";
+"No debts found" = "Долгов нет";
+"Track money you've lent or borrowed" = "Учитывайте деньги, которые вы дали или взяли в долг";
+"Add Debt" = "Добавить долг";
+"Delete this debt?" = "Удалить этот долг?";
+"Swipe right to mark as returned, tap for details and partial repayments." = "Смахните вправо, чтобы отметить возврат. Нажмите, чтобы открыть подробности и частичные возвраты.";
+"Reopen" = "Открыть снова";
+"Returned %@" = "Возвращён %@";
+"Due %@" = "Срок %@";
+"in %lld d" = "через %lld дн.";
+"%lld d overdue" = "просрочен на %lld дн.";
+"No due date · %lld d ago" = "Без срока · %lld дн. назад";
+"of %@" = "из %@";
+"Debt not found" = "Долг не найден";
+"Fully returned" = "Полностью возвращён";
+"%@ of %@ returned" = "Возвращено %@ из %@";
+"Partial Repayment" = "Частичный возврат";
+"Add Repayment" = "Добавить возврат";
+"Mark as Fully Returned" = "Отметить как возвращённый";
+"Repayments" = "Возвраты";
+"Due" = "Срок";
+"Reminder" = "Напоминание";
+"%lld days before" = "за %lld дн.";
+"Reopen Debt" = "Открыть долг снова";
+"Delete Debt" = "Удалить долг";
+"New Debt" = "Новый долг";
+"Edit Debt" = "Изменить долг";
+"I lent" = "Я дал";
+"I borrowed" = "Я взял";
+"Someone owes you money." = "Вам должны деньги.";
+"You owe someone money." = "Вы должны кому-то деньги.";
+"Person" = "Человек";
+"Dates" = "Даты";
+"Set Return Date" = "Указать срок возврата";
+"Return By" = "Вернуть до";
+"Remind Me" = "Напомнить";
+
+/* MARK: - Reports */
+"Spending Trend" = "Динамика расходов";
+"avg %@ / %@" = "в среднем %@ / %@";
+"No expenses in this period" = "Нет расходов за этот период";
+"Max %@" = "Максимум %@";
+"Expenses by Category" = "Расходы по категориям";
+
+/* MARK: - Budgets */
+"Budgets" = "Бюджеты";
+"No budgets yet" = "Бюджетов пока нет";
+"Create budgets to track your spending limits" = "Создайте бюджеты, чтобы следить за лимитами расходов";
+"Create Budget" = "Создать бюджет";
+"All Expenses" = "Все расходы";
+"Spent" = "Потрачено";
+"Remaining" = "Осталось";
+"Over budget" = "Перерасход";
+"%lld%% used" = "использовано %lld%%";
+"New Budget" = "Новый бюджет";
+"Limit" = "Лимит";
+
+/* MARK: - Goals */
+"Savings Goals" = "Цели накоплений";
+"Total Saved" = "Накоплено";
+"Total Target" = "Цель";
+"%lld Goals" = "Целей: %lld";
+"%lld Completed" = "Выполнено: %lld";
+"Touch and hold a goal to edit or delete it." = "Нажмите и удерживайте цель, чтобы изменить или удалить её.";
+"No savings goals yet" = "Целей пока нет";
+"Create goals to track your savings progress" = "Создайте цели, чтобы следить за накоплениями";
+"Create Goal" = "Создать цель";
+"Add Funds" = "Пополнить";
+"Completed!" = "Выполнено!";
+"Remaining: %@" = "Осталось: %@";
+"Goal Details" = "Цель";
+"Goal Name" = "Название цели";
+"Target Amount" = "Нужная сумма";
+"Already Saved" = "Уже накоплено";
+"Deadline" = "Срок";
+"New Goal" = "Новая цель";
+"Edit Goal" = "Изменить цель";
+"Saved %@ of %@" = "Накоплено %@ из %@";
+"Add %@" = "Добавить %@";
+"Withdraw %@" = "Снять %@";
+
+/* MARK: - Bills */
+"Bills & Subscriptions" = "Счета и подписки";
+"Add Bill" = "Добавить счёт к оплате";
+"Add Subscription" = "Добавить подписку";
+"Subscriptions / month" = "Подписки в месяц";
+"Per year" = "В год";
+"Due this month" = "К оплате в этом месяце";
+"Upcoming Bills" = "Ближайшие платежи";
+"No upcoming bills" = "Ближайших платежей нет";
+"Subscriptions" = "Подписки";
+"No subscriptions" = "Подписок нет";
+"Paid" = "Оплачено";
+"Next: %@" = "Следующий: %@";
+"Bill Details" = "Платёж";
+"Bill Name" = "Название";
+"Due Date" = "Срок оплаты";
+"Recurring Bill" = "Регулярный платёж";
+"Reminders" = "Напоминания";
+"Remind %lld days before" = "Напомнить за %lld дн.";
+"New Bill" = "Новый платёж";
+"Subscription Details" = "Подписка";
+"Subscription Name" = "Название подписки";
+"Billing Cycle" = "Период оплаты";
+"Next Billing Date" = "Следующее списание";
+"New Subscription" = "Новая подписка";
+
+/* MARK: - More / Settings */
+"Finance" = "Финансы";
+"Appearance" = "Оформление";
+"Theme" = "Тема";
+"System" = "Системная";
+"Light" = "Светлая";
+"Dark" = "Тёмная";
+"App Icon" = "Иконка приложения";
+"Category Icons" = "Иконки категорий";
+"Category Picker" = "Выбор категории";
+"Carousel" = "Карусель";
+"Compact grid" = "Компактная сетка";
+"System theme switches between light and dark automatically with your iPhone. Compact grid shows 3 categories and a ⋯ button that expands the full list right in the form." = "Системная тема переключается между светлой и тёмной вместе с iPhone. «Компактная сетка» показывает 3 категории и кнопку ⋯, которая раскрывает весь список прямо в форме.";
+"Classic" = "Классика";
+"Midnight" = "Полночь";
+"Emerald" = "Изумруд";
+"Sunset" = "Закат";
+"Minimal" = "Минимализм";
+"Save Location" = "Сохранять координаты";
+"New transactions remember where they were added. You can remove the location from any transaction." = "Новые операции запоминают место, где они были добавлены. Координаты можно удалить из любой операции.";
+"Location Access Is Off" = "Доступ к геопозиции выключен";
+"Allow location access for Money Manager in Settings to save where transactions were made." = "Разрешите Money Manager доступ к геопозиции в Настройках, чтобы сохранять место операций.";
+"Open Settings" = "Открыть Настройки";
+"Preferences" = "Настройки";
+"Currency" = "Валюта";
+"Language" = "Язык";
+"Security" = "Безопасность";
+"Passcode" = "Код-пароль";
+"Biometrics" = "Биометрия";
+"The app locks when it goes to the background." = "Приложение блокируется, когда уходит в фон.";
+"Data" = "Данные";
+"Export Data" = "Экспорт данных";
+"Import Data" = "Импорт данных";
+"Create Backup" = "Создать резервную копию";
+"A JSON backup includes accounts, transactions, debts, goals and bills. Restore it with Import." = "Резервная копия в JSON включает счета, операции, долги, цели и платежи. Восстановить её можно через «Импорт».";
+"CSV (transactions)" = "CSV (операции)";
+"JSON (everything)" = "JSON (всё)";
+"Imported %lld items" = "Импортировано записей: %lld";
+"%lld items failed" = "Не удалось импортировать: %lld";
+"About" = "О приложении";
+"Version" = "Версия";
+"Privacy Policy" = "Политика конфиденциальности";
+"Privacy" = "Конфиденциальность";
+"Terms of Service" = "Условия использования";
+"Terms" = "Условия";
+"Money Manager stores all data locally on your device. No data is collected, transmitted, or shared. Your financial information never leaves your device." = "Money Manager хранит все данные только на вашем устройстве. Данные не собираются, не передаются и никому не раскрываются. Ваша финансовая информация не покидает устройство.";
+"This app is provided as-is for personal use. All data is stored locally and is your responsibility to backup." = "Приложение предоставляется «как есть» для личного использования. Все данные хранятся локально, за резервные копии отвечаете вы.";
+"Could not save passcode" = "Не удалось сохранить код-пароль";
+"Set Passcode" = "Установить код-пароль";
+"New passcode" = "Новый код-пароль";
+"Repeat passcode" = "Повторите код-пароль";
+"Passcodes don't match" = "Код-пароли не совпадают";
+"4–8 digits." = "4–8 цифр.";
+"Enable %@ for Money Manager" = "Включить %@ для Money Manager";
+
+/* MARK: - Lock screen */
+"Enter your passcode" = "Введите код-пароль";
+"Unlock" = "Разблокировать";
+"Unlock with Face ID / Touch ID" = "Разблокировать по Face ID / Touch ID";
+"Authenticate to access Money Manager" = "Подтвердите вход в Money Manager";
+"Unlock Money Manager" = "Разблокировать Money Manager";
+
+/* MARK: - Import errors */
+"The file format is not supported." = "Формат файла не поддерживается.";
+"The file could not be found." = "Файл не найден.";
+"The file could not be read." = "Не удалось прочитать файл.";
+
+/* MARK: - Notifications */
+"Budget Alert" = "Бюджет";
+"You've spent %lld%% of your %@ budget" = "Потрачено %lld%% бюджета «%@»";
+"Debt reminder" = "Напоминание о долге";
+"%@ should return %@ by %@" = "%@ должен вернуть %@ до %@";
+"Time to pay back" = "Пора вернуть долг";
+"You owe %@ %@ by %@" = "Вы должны %@ %@ до %@";
+"Bill due soon" = "Скоро платёж";
+"%@: %@ due %@" = "%@: %@, срок %@";
+
+/* MARK: - Currencies */
+"Kazakhstani Tenge" = "Казахстанский тенге";
+"Russian Ruble" = "Российский рубль";
+"US Dollar" = "Доллар США";
+"Euro" = "Евро";
+"British Pound" = "Британский фунт";
+"Uzbekistani Som" = "Узбекский сум";
+"Kyrgyzstani Som" = "Киргизский сом";
+"Chinese Yuan" = "Китайский юань";
+"Turkish Lira" = "Турецкая лира";
+"UAE Dirham" = "Дирхам ОАЭ";

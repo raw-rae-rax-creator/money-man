@@ -5,7 +5,7 @@ import SwiftUI
 class SettingsViewModel: ObservableObject {
     @Published var settings = AppSettings()
     @Published var isBiometricAvailable: Bool = false
-    @Published var biometricType: String = "Biometrics"
+    @Published var biometricType: String = "Biometrics".localized
     @Published var showPasscodeSetup: Bool = false
     @Published var exportURL: URL?
     @Published var importResult: ImportResult?
@@ -38,7 +38,7 @@ class SettingsViewModel: ObservableObject {
         case .touchID:
             biometricType = "Touch ID"
         default:
-            biometricType = "Biometrics"
+            biometricType = "Biometrics".localized
         }
     }
 
@@ -49,7 +49,7 @@ class SettingsViewModel: ObservableObject {
     func setBiometric(_ enabled: Bool) async {
         if enabled {
             // Confirm the user can actually authenticate before turning the lock on.
-            guard await security.authenticateWithBiometrics(reason: "Enable \(biometricType) for Money Manager") else { return }
+            guard await security.authenticateWithBiometrics(reason: "Enable %@ for Money Manager".localizedFormat(biometricType)) else { return }
         }
         settings.biometricEnabled = enabled
         saveSettings()
@@ -62,7 +62,7 @@ class SettingsViewModel: ObservableObject {
             saveSettings()
             return true
         } catch {
-            errorMessage = "Could not save passcode"
+            errorMessage = "Could not save passcode".localized
             showError = true
             return false
         }
@@ -109,9 +109,9 @@ class SettingsViewModel: ObservableObject {
             }
             importResult = result
             showSuccess = true
-            successMessage = "Imported \(result.totalImported) items"
+            successMessage = "Imported %lld items".localizedFormat(result.totalImported)
             if !result.errors.isEmpty {
-                successMessage += "\n\(result.errors.count) items failed"
+                successMessage += "\n" + "%lld items failed".localizedFormat(result.errors.count)
             }
         } catch {
             showError = true

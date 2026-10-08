@@ -66,6 +66,11 @@ extension Double {
     func formattedAsCurrency(code: String? = nil) -> String {
         AppCurrency.format(self, code: code)
     }
+
+    /// "+1 500 ₸" / "−1 500 ₸"
+    var signedCurrency: String {
+        (self >= 0 ? "+" : "") + formattedAsCurrency()
+    }
 }
 
 extension String {

@@ -23,8 +23,8 @@ class NotificationService {
     func scheduleBudgetAlert(categoryName: String, spent: Double, budget: Double) {
         guard notificationsEnabled, budget > 0 else { return }
         let content = UNMutableNotificationContent()
-        content.title = "Budget Alert"
-        content.body = "You've spent \(Int((spent/budget) * 100))% of your \(categoryName) budget"
+        content.title = "Budget Alert".localized
+        content.body = "You've spent %lld%% of your %@ budget".localizedFormat(Int((spent / budget) * 100), categoryName)
         content.sound = .default
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
@@ -49,11 +49,15 @@ class NotificationService {
         content.sound = .default
         switch debt.type {
         case .given:
-            content.title = "Debt reminder"
-            content.body = "\(debt.personName) should return \(amount) by \(dueDate.formatted(date: .abbreviated, time: .omitted))"
+            content.title = "Debt reminder".localized
+            content.body = "%@ should return %@ by %@".localizedFormat(
+                debt.personName, amount, dueDate.formatted(date: .abbreviated, time: .omitted)
+            )
         case .received:
-            content.title = "Time to pay back"
-            content.body = "You owe \(debt.personName) \(amount) by \(dueDate.formatted(date: .abbreviated, time: .omitted))"
+            content.title = "Time to pay back".localized
+            content.body = "You owe %@ %@ by %@".localizedFormat(
+                debt.personName, amount, dueDate.formatted(date: .abbreviated, time: .omitted)
+            )
         }
 
         schedule(
@@ -77,8 +81,10 @@ class NotificationService {
         guard notificationsEnabled, !bill.isPaid else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "Bill due soon"
-        content.body = "\(bill.name): \(bill.amount.formattedAsCurrency()) due \(bill.dueDate.formatted(date: .abbreviated, time: .omitted))"
+        content.title = "Bill due soon".localized
+        content.body = "%@: %@ due %@".localizedFormat(
+            bill.name, bill.amount.formattedAsCurrency(), bill.dueDate.formatted(date: .abbreviated, time: .omitted)
+        )
         content.sound = .default
 
         schedule(

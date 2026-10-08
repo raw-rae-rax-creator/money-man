@@ -49,6 +49,22 @@ enum AppTheme: String, Codable, CaseIterable {
 
     static let storageKey = "appTheme"
 
+    var title: String {
+        switch self {
+        case .light: return "Light".localized
+        case .dark: return "Dark".localized
+        case .system: return "System".localized
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .light: return "sun.max.fill"
+        case .dark: return "moon.fill"
+        case .system: return "circle.lefthalf.filled"
+        }
+    }
+
     var colorScheme: ColorScheme? {
         switch self {
         case .light: return .light

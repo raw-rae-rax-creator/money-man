@@ -201,7 +201,7 @@ struct SubscriptionRowView: View {
                 Text(subscription.amount.formattedAsCurrency())
                     .font(.subheadline.bold().monospacedDigit())
 
-                Text("/ \(subscription.billingCycle.rawValue)")
+                Text(verbatim: "/ " + subscription.billingCycle.title.lowercased())
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -228,7 +228,7 @@ struct BillFormView: View {
                     TextField("Bill Name", text: $viewModel.billName)
 
                     HStack {
-                        TextField("Amount", text: $viewModel.billAmount)
+                        TextField("Amount", text: $viewModel.billAmount.amountFormatted())
                             .keyboardType(.decimalPad)
                         Text(AppCurrency.symbol)
                             .foregroundColor(.secondary)
@@ -243,7 +243,7 @@ struct BillFormView: View {
                     if viewModel.billIsRecurring {
                         Picker("Frequency", selection: $viewModel.billFrequency) {
                             ForEach(RecurringFrequency.allCases, id: \.self) { freq in
-                                Text(freq.rawValue.capitalized).tag(freq)
+                                Text(freq.title).tag(freq)
                             }
                         }
                         .pickerStyle(.menu)
@@ -287,7 +287,7 @@ struct SubscriptionFormView: View {
                     TextField("Subscription Name", text: $viewModel.subscriptionName)
 
                     HStack {
-                        TextField("Amount", text: $viewModel.subscriptionAmount)
+                        TextField("Amount", text: $viewModel.subscriptionAmount.amountFormatted())
                             .keyboardType(.decimalPad)
                         Text(AppCurrency.symbol)
                             .foregroundColor(.secondary)
@@ -295,7 +295,7 @@ struct SubscriptionFormView: View {
 
                     Picker("Billing Cycle", selection: $viewModel.subscriptionCycle) {
                         ForEach(BillingCycle.allCases, id: \.self) { cycle in
-                            Text(cycle.rawValue.capitalized).tag(cycle)
+                            Text(cycle.title).tag(cycle)
                         }
                     }
                     .pickerStyle(.menu)
