@@ -69,7 +69,7 @@ struct SettingsView: View {
                 Button("Open Settings") { openAppSettings() }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Allow location access for Money Manager in Settings to save where transactions were made.")
+                Text("Allow location access for moneai in Settings to save where transactions were made.")
             }
             .sheet(isPresented: $viewModel.showPasscodeSetup) {
                 PasscodeSetupView { passcode in
@@ -268,7 +268,7 @@ struct SettingsView: View {
 
             NavigationLink("Privacy Policy") {
                 ScrollView {
-                    Text("Money Manager stores all data locally on your device. No data is collected, transmitted, or shared. Your financial information never leaves your device.")
+                    Text("moneai stores all data locally on your device. No data is collected, transmitted, or shared. Your financial information never leaves your device.")
                         .padding()
                 }
                 .navigationTitle("Privacy")

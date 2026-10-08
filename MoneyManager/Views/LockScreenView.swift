@@ -22,7 +22,7 @@ struct LockScreenView: View {
                 .font(.system(size: 56))
                 .foregroundColor(.accentColor)
 
-            Text("Money Manager")
+            Text(verbatim: "moneai")
                 .font(.title.bold())
 
             if usesPasscode {

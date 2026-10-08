@@ -16,7 +16,7 @@ chmod +x setup.sh
 
 ### Open and Run
 ```bash
-open MoneyManager.xcodeproj
+open moneai.xcodeproj
 ```
 
 ---
@@ -78,7 +78,7 @@ The Info.plist is already configured with:
 
 The included .xcodeproj is minimal. You need to:
 
-1. Open MoneyManager.xcodeproj in Xcode
+1. Open moneai.xcodeproj in Xcode
 2. Add all Swift files manually:
    - Right-click on MoneyManager group
    - Add Files to "MoneyManager"...
@@ -118,7 +118,7 @@ The included .xcodeproj is minimal. You need to:
 
 ```
 MoneyManager/
-├── MoneyManager.xcodeproj/          # Xcode project
+├── moneai.xcodeproj/          # Xcode project
 ├── MoneyManager/
 │   ├── Models/                      # Data models
 │   │   ├── Transaction.swift

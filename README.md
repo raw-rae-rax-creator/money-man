@@ -75,7 +75,7 @@ MoneyManager/
 1. **Open Project in Xcode**
    ```bash
    cd MoneyManager
-   open MoneyManager.xcodeproj
+   open moneai.xcodeproj
    ```
 
 2. **Configure Signing**

@@ -49,7 +49,7 @@ class SettingsViewModel: ObservableObject {
     func setBiometric(_ enabled: Bool) async {
         if enabled {
             // Confirm the user can actually authenticate before turning the lock on.
-            guard await security.authenticateWithBiometrics(reason: "Enable %@ for Money Manager".localizedFormat(biometricType)) else { return }
+            guard await security.authenticateWithBiometrics(reason: "Enable %@ for moneai".localizedFormat(biometricType)) else { return }
         }
         settings.biometricEnabled = enabled
         saveSettings()

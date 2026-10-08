@@ -71,7 +71,7 @@ class ImportExportService {
     private func exportURL(extension ext: String) -> URL {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd_HH-mm"
-        let fileName = "MoneyManager_\(formatter.string(from: Date())).\(ext)"
+        let fileName = "moneai_\(formatter.string(from: Date())).\(ext)"
         return FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
     }
 

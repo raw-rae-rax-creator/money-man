@@ -25,4 +25,4 @@ xcodegen generate
 
 echo "✅ Project generated successfully!"
 echo ""
-echo "📱 Open MoneyManager.xcodeproj in Xcode and run!"
+echo "📱 Open moneai.xcodeproj in Xcode and run!"

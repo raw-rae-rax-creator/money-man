@@ -2,13 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDisplayName</key>
+	<string>moneai</string>
+	<key>CFBundleName</key>
+	<string>moneai</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Face ID is used to unlock Money Manager and protect your financial data.</string>
+	<string>Face ID is used to unlock moneai and protect your financial data.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Your location is saved with new transactions so you can see where you spent money. You can turn this off in Settings.</string>
 	<key>UIFileSharingEnabled</key>

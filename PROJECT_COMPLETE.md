@@ -25,7 +25,7 @@ cd MoneyManager
 ./setup.sh
 
 # Open in Xcode
-open MoneyManager.xcodeproj
+open moneai.xcodeproj
 ```
 
 ### Option 2: Manual Xcode Setup
@@ -54,7 +54,7 @@ open MoneyManager.xcodeproj
 
 ```
 MoneyManager/
-├── MoneyManager.xcodeproj/          ← Xcode project
+├── moneai.xcodeproj/          ← Xcode project
 ├── MoneyManager/
 │   ├── Models/                      ← 7 files
 │   │   ├── Transaction.swift
@@ -174,7 +174,7 @@ cd MoneyManager
 
 **Open in Xcode:**
 ```bash
-open MoneyManager.xcodeproj
+open moneai.xcodeproj
 ```
 
 ### Option 2: Manual Setup

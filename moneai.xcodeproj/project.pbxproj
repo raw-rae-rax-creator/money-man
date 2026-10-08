@@ -114,7 +114,7 @@
 		B10000000000000000000044 /* AccountViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountViewModel.swift; sourceTree = "<group>"; };
 		B10000000000000000000043 /* Currency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Currency.swift; sourceTree = "<group>"; };
 		B10000000000000000000046 /* MoneyManagerModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MoneyManagerModel.xcdatamodel; sourceTree = "<group>"; };
-		B10000000000000000000099 /* MoneyManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoneyManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B10000000000000000000099 /* moneai.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = moneai.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -236,7 +236,7 @@
 		C10000000000000000000099 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B10000000000000000000099 /* MoneyManager.app */,
+				B10000000000000000000099 /* moneai.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -244,9 +244,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		D10000000000000000000001 /* MoneyManager */ = {
+		D10000000000000000000001 /* moneai */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E10000000000000000000003 /* Build configuration list for PBXNativeTarget "MoneyManager" */;
+			buildConfigurationList = E10000000000000000000003 /* Build configuration list for PBXNativeTarget "moneai" */;
 			buildPhases = (
 				F10000000000000000000001 /* Sources */,
 				F10000000000000000000002 /* Resources */,
@@ -256,9 +256,9 @@
 			);
 			dependencies = (
 			);
-			name = MoneyManager;
-			productName = MoneyManager;
-			productReference = B10000000000000000000099 /* MoneyManager.app */;
+			name = moneai;
+			productName = moneai;
+			productReference = B10000000000000000000099 /* moneai.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -276,7 +276,7 @@
 					};
 				};
 			};
-			buildConfigurationList = E10000000000000000000001 /* Build configuration list for PBXProject "MoneyManager" */;
+			buildConfigurationList = E10000000000000000000001 /* Build configuration list for PBXProject "moneai" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -290,7 +290,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D10000000000000000000001 /* MoneyManager */,
+				D10000000000000000000001 /* moneai */,
 			);
 		};
 /* End PBXProject section */
@@ -455,9 +455,10 @@
 				DEVELOPMENT_TEAM = Z4U8HCNL8K;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MoneyManager/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = moneai;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is not required";
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Use Face ID to secure your financial data";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to unlock moneai and protect your financial data.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is not required";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
@@ -487,9 +488,10 @@
 				DEVELOPMENT_TEAM = Z4U8HCNL8K;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MoneyManager/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = moneai;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is not required";
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Use Face ID to secure your financial data";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to unlock moneai and protect your financial data.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access is not required";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
@@ -511,7 +513,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		E10000000000000000000001 /* Build configuration list for PBXProject "MoneyManager" */ = {
+		E10000000000000000000001 /* Build configuration list for PBXProject "moneai" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				H10000000000000000000001 /* Debug */,
@@ -520,7 +522,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E10000000000000000000003 /* Build configuration list for PBXNativeTarget "MoneyManager" */ = {
+		E10000000000000000000003 /* Build configuration list for PBXNativeTarget "moneai" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				H10000000000000000000003 /* Debug */,

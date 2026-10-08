@@ -38,7 +38,6 @@
 "Status" = "Статус";
 "Filter" = "Фильтр";
 "Delete %@?" = "Удалить «%@»?";
-"Money Manager" = "Money Manager";
 "Uncategorized" = "Без категории";
 "Today" = "Сегодня";
 "Yesterday" = "Вчера";
@@ -296,7 +295,7 @@
 "Save Location" = "Сохранять координаты";
 "New transactions remember where they were added. You can remove the location from any transaction." = "Новые операции запоминают место, где они были добавлены. Координаты можно удалить из любой операции.";
 "Location Access Is Off" = "Доступ к геопозиции выключен";
-"Allow location access for Money Manager in Settings to save where transactions were made." = "Разрешите Money Manager доступ к геопозиции в Настройках, чтобы сохранять место операций.";
+"Allow location access for moneai in Settings to save where transactions were made." = "Разрешите moneai доступ к геопозиции в Настройках, чтобы сохранять место операций.";
 "Open Settings" = "Открыть Настройки";
 "Preferences" = "Настройки";
 "Currency" = "Валюта";
@@ -320,7 +319,7 @@
 "Privacy" = "Конфиденциальность";
 "Terms of Service" = "Условия использования";
 "Terms" = "Условия";
-"Money Manager stores all data locally on your device. No data is collected, transmitted, or shared. Your financial information never leaves your device." = "Money Manager хранит все данные только на вашем устройстве. Данные не собираются, не передаются и никому не раскрываются. Ваша финансовая информация не покидает устройство.";
+"moneai stores all data locally on your device. No data is collected, transmitted, or shared. Your financial information never leaves your device." = "moneai хранит все данные только на вашем устройстве. Данные не собираются, не передаются и никому не раскрываются. Ваша финансовая информация не покидает устройство.";
 "This app is provided as-is for personal use. All data is stored locally and is your responsibility to backup." = "Приложение предоставляется «как есть» для личного использования. Все данные хранятся локально, за резервные копии отвечаете вы.";
 "Could not save passcode" = "Не удалось сохранить код-пароль";
 "Set Passcode" = "Установить код-пароль";
@@ -328,14 +327,14 @@
 "Repeat passcode" = "Повторите код-пароль";
 "Passcodes don't match" = "Код-пароли не совпадают";
 "4–8 digits." = "4–8 цифр.";
-"Enable %@ for Money Manager" = "Включить %@ для Money Manager";
+"Enable %@ for moneai" = "Включить %@ для moneai";
 
 /* MARK: - Lock screen */
 "Enter your passcode" = "Введите код-пароль";
 "Unlock" = "Разблокировать";
 "Unlock with Face ID / Touch ID" = "Разблокировать по Face ID / Touch ID";
-"Authenticate to access Money Manager" = "Подтвердите вход в Money Manager";
-"Unlock Money Manager" = "Разблокировать Money Manager";
+"Authenticate to access moneai" = "Подтвердите вход в moneai";
+"Unlock moneai" = "Разблокировать moneai";
 
 /* MARK: - Import errors */
 "The file format is not supported." = "Формат файла не поддерживается.";
