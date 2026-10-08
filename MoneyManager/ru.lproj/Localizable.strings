@@ -408,3 +408,26 @@
 "The amount is added to the account. It isn't counted as income." = "Сумма поступит на счёт. В доходы она не попадёт.";
 "The returned money is added to the account balance." = "Возвращённые деньги поступят на счёт.";
 "The money you pay back is taken from the account balance." = "Деньги, которые вы отдаёте, спишутся со счёта.";
+
+/* MARK: - Paying bills & subscriptions */
+"Pay" = "Оплатить";
+"Pay %@" = "Оплатить %@";
+"Skip" = "Пропустить";
+"Last paid %@ · %@" = "Оплачено %@ · %@";
+"Overdue since %@" = "Просрочено с %@";
+"Charged today" = "Списание сегодня";
+"Same as last time: %@" = "Как в прошлый раз: %@";
+"Only marks it as paid; no expense is recorded." = "Только отметить оплату, расход не записывается.";
+"An expense is added to Transactions and the account balance goes down." = "В операции добавится расход, баланс счёта уменьшится.";
+"Priced in Another Currency" = "Цена в другой валюте";
+"Price" = "Цена";
+"Enter the approximate amount in %@ above. When you pay, you'll enter what was actually charged and the rate is remembered." = "Выше укажите примерную сумму в %@. При оплате вы введёте фактически списанную сумму, и курс запомнится.";
+"For example, a subscription billed in dollars." = "Например, подписка, которая списывается в долларах.";
+"Tap Pay when a subscription is charged: the amount is added to expenses and taken from the account. Swipe left to skip a period." = "Нажмите «Оплатить», когда подписка списалась: сумма попадёт в расходы и спишется со счёта. Смахните влево, чтобы пропустить период.";
+"Charged" = "Списано";
+"As expected" = "Как ожидалось";
+"Different amount" = "Другая сумма";
+"Actually charged" = "Фактически списано";
+"%@ more than expected" = "На %@ больше ожидаемого";
+"%@ less than expected" = "На %@ меньше ожидаемого";
+"Expect this amount next time" = "Ожидать эту сумму в следующий раз";

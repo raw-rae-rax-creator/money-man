@@ -9,21 +9,33 @@ class BillsViewModel: ObservableObject {
     @Published var showAddBillSheet: Bool = false
     @Published var showAddSubscriptionSheet: Bool = false
 
+    /// Set to open the payment sheet.
+    @Published var paymentRequest: PaymentRequest?
+    @Published var accounts: [Account] = []
+    @Published var expenseCategories: [Category] = []
+
     @Published var billName: String = ""
     @Published var billAmount: String = ""
     @Published var billDueDate: Date = Date()
     @Published var billIsRecurring: Bool = false
     @Published var billFrequency: RecurringFrequency = .monthly
     @Published var billReminderDays: Int = 3
+    @Published var billHasForeignPrice: Bool = false
+    @Published var billForeignCurrency: String = "USD"
+    @Published var billForeignAmount: String = ""
 
     @Published var subscriptionName: String = ""
     @Published var subscriptionAmount: String = ""
     @Published var subscriptionCycle: BillingCycle = .monthly
     @Published var subscriptionNextDate: Date = Date()
+    @Published var subscriptionHasForeignPrice: Bool = false
+    @Published var subscriptionForeignCurrency: String = "USD"
+    @Published var subscriptionForeignAmount: String = ""
 
     private let billsKey = ImportExportService.billsKey
     private let subscriptionsKey = ImportExportService.subscriptionsKey
     private let notifications = NotificationService.shared
+    private let database = DatabaseService.shared
 
     func loadData() {
         isLoading = true
@@ -36,35 +48,13 @@ class BillsViewModel: ObservableObject {
 
         if let data = UserDefaults.standard.data(forKey: subscriptionsKey),
            let decoded = try? JSONDecoder().decode([Subscription].self, from: data) {
-            subscriptions = decoded
+            // Billing dates no longer roll forward by themselves: a due subscription
+            // waits until it's paid (or skipped), so no charge goes unrecorded.
+            subscriptions = decoded.sorted { $0.nextBillingDate < $1.nextBillingDate }
         }
 
-        rollSubscriptionsForward()
-        subscriptions.sort { $0.nextBillingDate < $1.nextBillingDate }
-    }
-
-    /// Moves past billing dates to the next upcoming one.
-    private func rollSubscriptionsForward() {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        var changed = false
-
-        for index in subscriptions.indices {
-            let step = subscriptions[index].billingCycle.dateComponent
-            var next = subscriptions[index].nextBillingDate
-            var iterations = 0
-            while calendar.startOfDay(for: next) < today && iterations < 1000 {
-                guard let advanced = calendar.date(byAdding: step, to: next) else { break }
-                next = advanced
-                iterations += 1
-            }
-            if next != subscriptions[index].nextBillingDate {
-                subscriptions[index].nextBillingDate = next
-                changed = true
-            }
-        }
-
-        if changed { saveData() }
+        accounts = (try? database.fetchAccounts()) ?? []
+        expenseCategories = (try? database.fetchCategories(type: .expense)) ?? []
     }
 
     func saveData() {
@@ -76,13 +66,31 @@ class BillsViewModel: ObservableObject {
         }
     }
 
+    /// Currencies that can be used for a foreign price (everything except the app currency).
+    var foreignCurrencies: [CurrencyInfo] {
+        AppCurrency.all.filter { $0.code != AppCurrency.code }
+    }
+
+    /// "Bills & Utilities" when it exists, otherwise the first expense category.
+    var defaultCategoryId: UUID? {
+        expenseCategories.first { $0.name == "Bills & Utilities" }?.id ?? expenseCategories.first?.id
+    }
+
+    // MARK: - Forms
+
     var isBillFormValid: Bool {
         guard let amount = AppCurrency.parseAmount(billAmount), amount > 0 else { return false }
+        if billHasForeignPrice {
+            guard let foreign = AppCurrency.parseAmount(billForeignAmount), foreign > 0 else { return false }
+        }
         return !billName.trimmed.isEmpty
     }
 
     var isSubscriptionFormValid: Bool {
         guard let amount = AppCurrency.parseAmount(subscriptionAmount), amount > 0 else { return false }
+        if subscriptionHasForeignPrice {
+            guard let foreign = AppCurrency.parseAmount(subscriptionForeignAmount), foreign > 0 else { return false }
+        }
         return !subscriptionName.trimmed.isEmpty
     }
 
@@ -95,7 +103,9 @@ class BillsViewModel: ObservableObject {
             dueDate: billDueDate,
             recurringFrequency: billIsRecurring ? billFrequency : nil,
             isRecurring: billIsRecurring,
-            reminderDaysBefore: billReminderDays
+            reminderDaysBefore: billReminderDays,
+            foreignAmount: billHasForeignPrice ? AppCurrency.parseAmount(billForeignAmount) : nil,
+            foreignCurrency: billHasForeignPrice ? billForeignCurrency : nil
         )
 
         bills.append(bill)
@@ -113,21 +123,79 @@ class BillsViewModel: ObservableObject {
             name: subscriptionName.trimmed,
             amount: amount,
             billingCycle: subscriptionCycle,
-            nextBillingDate: subscriptionNextDate
+            nextBillingDate: subscriptionNextDate,
+            foreignAmount: subscriptionHasForeignPrice ? AppCurrency.parseAmount(subscriptionForeignAmount) : nil,
+            foreignCurrency: subscriptionHasForeignPrice ? subscriptionForeignCurrency : nil
         )
 
         subscriptions.append(subscription)
-        rollSubscriptionsForward()
         subscriptions.sort { $0.nextBillingDate < $1.nextBillingDate }
         saveData()
         Haptics.success()
         resetSubscriptionForm()
     }
 
-    func markBillAsPaid(_ bill: Bill) {
-        guard let index = bills.firstIndex(where: { $0.id == bill.id }) else { return }
+    // MARK: - Payments
 
-        // A recurring bill moves to its next due date instead of disappearing.
+    func requestPayment(for bill: Bill) {
+        paymentRequest = PaymentRequest(bill: bill)
+    }
+
+    func requestPayment(for subscription: Subscription) {
+        paymentRequest = PaymentRequest(subscription: subscription)
+    }
+
+    /// Records the payment as an expense (when an account is chosen), remembers the
+    /// amount / exchange rate / account / category for next time, and moves the item on.
+    func completePayment(_ request: PaymentRequest, _ result: PaymentResult) {
+        if let accountId = result.accountId, let categoryId = result.categoryId {
+            let transaction = Transaction(
+                amount: result.amount,
+                type: .expense,
+                categoryId: categoryId,
+                accountId: accountId,
+                note: request.name,
+                date: result.date
+            )
+            do {
+                try database.createTransaction(transaction)
+            } catch {
+                print("Error recording payment: \(error)")
+                return
+            }
+        }
+
+        let rate: Double? = request.foreignAmount.flatMap { $0 > 0 ? result.amount / $0 : nil }
+
+        switch request.source {
+        case .bill:
+            guard let index = bills.firstIndex(where: { $0.id == request.id }) else { break }
+            bills[index].lastPaidAt = result.date
+            bills[index].lastPaidAmount = result.amount
+            bills[index].accountId = result.accountId ?? bills[index].accountId
+            bills[index].categoryId = result.categoryId ?? bills[index].categoryId
+            if let rate = rate { bills[index].lastRate = rate }
+            if result.rememberAmount { bills[index].amount = result.amount }
+            advanceBill(at: index)
+
+        case .subscription:
+            guard let index = subscriptions.firstIndex(where: { $0.id == request.id }) else { break }
+            subscriptions[index].lastPaidAt = result.date
+            subscriptions[index].lastPaidAmount = result.amount
+            subscriptions[index].accountId = result.accountId ?? subscriptions[index].accountId
+            subscriptions[index].categoryId = result.categoryId ?? subscriptions[index].categoryId
+            if let rate = rate { subscriptions[index].lastRate = rate }
+            if result.rememberAmount { subscriptions[index].amount = result.amount }
+            advanceSubscription(at: index)
+        }
+
+        saveData()
+        Haptics.success()
+    }
+
+    /// Recurring bills move to the next due date; one-off bills become paid.
+    private func advanceBill(at index: Int) {
+        let bill = bills[index]
         if bill.isRecurring,
            let frequency = bill.recurringFrequency,
            let nextDate = Calendar.current.date(byAdding: frequency.dateComponent, to: bill.dueDate) {
@@ -139,8 +207,21 @@ class BillsViewModel: ObservableObject {
             notifications.cancelBillReminder(id: bill.id)
         }
         bills.sort { $0.dueDate < $1.dueDate }
+    }
+
+    private func advanceSubscription(at index: Int) {
+        let subscription = subscriptions[index]
+        if let next = Calendar.current.date(byAdding: subscription.billingCycle.dateComponent, to: subscription.nextBillingDate) {
+            subscriptions[index].nextBillingDate = next
+        }
+        subscriptions.sort { $0.nextBillingDate < $1.nextBillingDate }
+    }
+
+    /// Moves a subscription to its next billing date without recording a payment.
+    func skip(_ subscription: Subscription) {
+        guard let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) else { return }
+        advanceSubscription(at: index)
         saveData()
-        Haptics.success()
     }
 
     func deleteBill(_ bill: Bill) {
@@ -161,6 +242,9 @@ class BillsViewModel: ObservableObject {
         billIsRecurring = false
         billFrequency = .monthly
         billReminderDays = 3
+        billHasForeignPrice = false
+        billForeignCurrency = foreignCurrencies.first { $0.code == "USD" }?.code ?? foreignCurrencies.first?.code ?? "USD"
+        billForeignAmount = ""
         showAddBillSheet = false
     }
 
@@ -169,8 +253,13 @@ class BillsViewModel: ObservableObject {
         subscriptionAmount = ""
         subscriptionCycle = .monthly
         subscriptionNextDate = Date()
+        subscriptionHasForeignPrice = false
+        subscriptionForeignCurrency = foreignCurrencies.first { $0.code == "USD" }?.code ?? foreignCurrencies.first?.code ?? "USD"
+        subscriptionForeignAmount = ""
         showAddSubscriptionSheet = false
     }
+
+    // MARK: - Lists & totals
 
     var upcomingBills: [Bill] {
         bills.filter { !$0.isPaid && !$0.isOverdue }
@@ -190,6 +279,8 @@ class BillsViewModel: ObservableObject {
 
     var totalDueThisMonth: Double {
         let endOfMonth = Date().interval(of: .month).end
-        return bills.filter { !$0.isPaid && $0.dueDate < endOfMonth }.reduce(0) { $0 + $1.amount }
+        let billsDue = bills.filter { !$0.isPaid && $0.dueDate < endOfMonth }.reduce(0) { $0 + $1.amount }
+        let subscriptionsDue = subscriptions.filter { $0.nextBillingDate < endOfMonth }.reduce(0) { $0 + $1.amount }
+        return billsDue + subscriptionsDue
     }
 }
