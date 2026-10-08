@@ -305,18 +305,41 @@ struct SettingsRow: View {
 }
 
 struct AppIconPickerView: View {
-    @State private var currentIcon: String? = UIApplication.shared.alternateIconName
+    @AppStorage(AppIconManager.styleKey) private var styleRaw = AppIconStyle.classic.rawValue
+    @AppStorage(AppIconManager.matchCurrencyKey) private var matchesCurrency = false
+    @AppStorage(AppCurrency.storageKey) private var currencyCode: String = AppCurrency.defaultCode
     @State private var errorMessage: String?
+
+    private var glyph: AppIconGlyph {
+        matchesCurrency ? .forCurrency(currencyCode) : .neutral
+    }
 
     var body: some View {
         List {
             Section {
-                ForEach(AppIconOption.all) { option in
+                Toggle("Currency Sign on Icon", isOn: Binding(
+                    get: { matchesCurrency },
+                    set: { newValue in
+                        matchesCurrency = newValue
+                        apply()
+                    }
+                ))
+            } footer: {
+                if matchesCurrency && glyph == .neutral {
+                    Text("There is no icon for this currency yet, so the wallet is used.")
+                } else {
+                    Text("The icon shows ₸, ₽, $ or € and changes when you switch currency. Otherwise a wallet is shown.")
+                }
+            }
+
+            Section("Style") {
+                ForEach(AppIconStyle.allCases) { style in
                     Button {
-                        select(option)
+                        styleRaw = style.rawValue
+                        apply()
                     } label: {
                         HStack(spacing: 16) {
-                            Image(option.previewImage)
+                            Image(AppIconManager.previewImage(style: style, glyph: glyph))
                                 .resizable()
                                 .frame(width: 60, height: 60)
                                 .clipShape(RoundedRectangle(cornerRadius: 13.5, style: .continuous))
@@ -325,12 +348,12 @@ struct AppIconPickerView: View {
                                         .stroke(Color(.separator), lineWidth: 0.5)
                                 )
 
-                            Text(LocalizedStringKey(option.title))
+                            Text(style.title)
                                 .foregroundColor(.primary)
 
                             Spacer()
 
-                            if currentIcon == option.iconName {
+                            if styleRaw == style.rawValue {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.title3)
                                     .foregroundColor(.accentColor)
@@ -339,8 +362,10 @@ struct AppIconPickerView: View {
                         .padding(.vertical, 4)
                     }
                 }
-            } footer: {
-                if let errorMessage = errorMessage {
+            }
+
+            if let errorMessage = errorMessage {
+                Section {
                     Text(errorMessage)
                         .foregroundColor(.red)
                 }
@@ -350,17 +375,11 @@ struct AppIconPickerView: View {
         .navigationTitle("App Icon")
     }
 
-    private func select(_ option: AppIconOption) {
-        guard UIApplication.shared.supportsAlternateIcons, option.iconName != currentIcon else { return }
-        UIApplication.shared.setAlternateIconName(option.iconName) { error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    errorMessage = error.localizedDescription
-                } else {
-                    errorMessage = nil
-                    currentIcon = option.iconName
-                    Haptics.success()
-                }
+    private func apply() {
+        AppIconManager.applyCurrent { error in
+            errorMessage = error?.localizedDescription
+            if error == nil {
+                Haptics.success()
             }
         }
     }

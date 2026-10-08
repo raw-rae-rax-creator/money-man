@@ -23,6 +23,13 @@ struct Transaction: Identifiable, Codable {
     var latitude: Double?
     var longitude: Double?
     var placeName: String?
+    /// Set when the transaction was cancelled instead of deleted. A cancelled transaction
+    /// stays in the list but no longer affects account balances or statistics.
+    var cancelledAt: Date?
+
+    var isCancelled: Bool {
+        cancelledAt != nil
+    }
 
     var hasLocation: Bool {
         latitude != nil && longitude != nil
@@ -41,7 +48,8 @@ struct Transaction: Identifiable, Codable {
         tags: [String] = [],
         latitude: Double? = nil,
         longitude: Double? = nil,
-        placeName: String? = nil
+        placeName: String? = nil,
+        cancelledAt: Date? = nil
     ) {
         self.id = id
         self.amount = amount
@@ -56,6 +64,7 @@ struct Transaction: Identifiable, Codable {
         self.latitude = latitude
         self.longitude = longitude
         self.placeName = placeName
+        self.cancelledAt = cancelledAt
         self.createdAt = Date()
         self.updatedAt = Date()
     }

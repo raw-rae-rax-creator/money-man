@@ -35,7 +35,7 @@ class TransactionListViewModel: ObservableObject {
 
         do {
             let (from, to) = getDateRange()
-            transactions = try database.fetchTransactions(from: from, to: to)
+            transactions = try database.fetchTransactions(from: from, to: to, includeCancelled: true)
             let categories = try database.fetchCategories()
             let accounts = try database.fetchAccounts()
             categoriesById = Dictionary(categories.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
@@ -77,6 +77,29 @@ class TransactionListViewModel: ObservableObject {
             .sorted { $0.day > $1.day }
     }
 
+    /// Swipe "Delete" on an active transaction cancels it: the money returns to the
+    /// account and the row stays, marked as cancelled.
+    func cancelTransaction(_ transaction: Transaction) async {
+        do {
+            try database.cancelTransaction(id: transaction.id)
+            Haptics.success()
+        } catch {
+            print("Error cancelling transaction: \(error)")
+        }
+        await loadTransactions()
+    }
+
+    func restoreTransaction(_ transaction: Transaction) async {
+        do {
+            try database.restoreTransaction(id: transaction.id)
+            Haptics.success()
+        } catch {
+            print("Error restoring transaction: \(error)")
+        }
+        await loadTransactions()
+    }
+
+    /// Permanent removal, offered only for transactions that are already cancelled.
     func deleteTransaction(_ transaction: Transaction) async {
         do {
             try database.deleteTransaction(id: transaction.id)
@@ -119,12 +142,13 @@ class TransactionListViewModel: ObservableObject {
         }
     }
 
+    // Cancelled transactions are listed but never counted.
     func getTotalIncome() -> Double {
-        filteredTransactions.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
+        filteredTransactions.filter { $0.type == .income && !$0.isCancelled }.reduce(0) { $0 + $1.amount }
     }
 
     func getTotalExpenses() -> Double {
-        filteredTransactions.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
+        filteredTransactions.filter { $0.type == .expense && !$0.isCancelled }.reduce(0) { $0 + $1.amount }
     }
 
     func getNetAmount() -> Double {

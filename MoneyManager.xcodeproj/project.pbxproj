@@ -60,6 +60,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B10000000000000000000057 /* MoneyManagerModel_v3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MoneyManagerModel_v3.xcdatamodel; sourceTree = "<group>"; };
 		B10000000000000000000054 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		B10000000000000000000053 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		B10000000000000000000052 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -447,7 +448,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Dark AppIcon-Green AppIcon-Sunset AppIcon-Mono";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -480,7 +480,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Dark AppIcon-Green AppIcon-Sunset AppIcon-Mono";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
@@ -559,8 +558,9 @@
 			children = (
 				B10000000000000000000046 /* MoneyManagerModel.xcdatamodel */,
 				B10000000000000000000047 /* MoneyManagerModel_v2.xcdatamodel */,
+				B10000000000000000000057 /* MoneyManagerModel_v3.xcdatamodel */,
 			);
-			currentVersion = B10000000000000000000047 /* MoneyManagerModel_v2.xcdatamodel */;
+			currentVersion = B10000000000000000000057 /* MoneyManagerModel_v3.xcdatamodel */;
 			path = MoneyManagerModel.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

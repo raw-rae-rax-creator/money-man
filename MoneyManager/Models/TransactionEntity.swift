@@ -18,6 +18,7 @@ public class TransactionEntity: NSManagedObject {
     @NSManaged public var latitude: NSNumber?
     @NSManaged public var longitude: NSNumber?
     @NSManaged public var placeName: String?
+    @NSManaged public var cancelledAt: Date?
 
     func toTransaction() -> Transaction? {
         guard let type = TransactionType(rawValue: type) else { return nil }
@@ -37,7 +38,8 @@ public class TransactionEntity: NSManagedObject {
             tags: tagsArray,
             latitude: latitude?.doubleValue,
             longitude: longitude?.doubleValue,
-            placeName: placeName
+            placeName: placeName,
+            cancelledAt: cancelledAt
         )
     }
 }

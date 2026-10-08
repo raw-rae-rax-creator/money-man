@@ -92,9 +92,6 @@
 "Recurring" = "Повтор";
 "Recurring Transaction" = "Регулярная операция";
 "Frequency" = "Частота";
-"Delete Transaction" = "Удалить операцию";
-"Delete this transaction?" = "Удалить эту операцию?";
-"The account balance will be adjusted." = "Баланс счёта будет пересчитан.";
 "Please enter a valid amount" = "Введите корректную сумму";
 "Please select a category" = "Выберите категорию";
 "Please select an account" = "Выберите счёт";
@@ -366,3 +363,22 @@
 "Chinese Yuan" = "Китайский юань";
 "Turkish Lira" = "Турецкая лира";
 "UAE Dirham" = "Дирхам ОАЭ";
+
+/* MARK: - Cancelled transactions */
+"Cancelled" = "Отменена";
+"Void" = "Отменить";
+"Restore" = "Вернуть";
+"Void Transaction" = "Отменить операцию";
+"Void this transaction?" = "Отменить эту операцию?";
+"The amount goes back to the account. The transaction stays in the list marked as cancelled and no longer counts in statistics." = "Сумма вернётся на счёт. Операция останется в списке с пометкой «Отменена» и перестанет учитываться в статистике.";
+"Delete permanently?" = "Удалить навсегда?";
+"Delete Permanently" = "Удалить навсегда";
+"The transaction will disappear from the list. This can't be undone." = "Операция исчезнет из списка. Это действие нельзя отменить.";
+"Cancelled on %@. It doesn't affect balances or statistics." = "Отменена %@. Не влияет на баланс и статистику.";
+"Restore Transaction" = "Вернуть операцию";
+
+/* MARK: - App icon */
+"Style" = "Стиль";
+"Currency Sign on Icon" = "Знак валюты на иконке";
+"There is no icon for this currency yet, so the wallet is used." = "Для этой валюты пока нет иконки, поэтому показан кошелёк.";
+"The icon shows ₸, ₽, $ or € and changes when you switch currency. Otherwise a wallet is shown." = "На иконке будет ₸, ₽, $ или €, и она сменится вместе с валютой. Иначе на иконке кошелёк.";

@@ -47,7 +47,7 @@ class ImportExportService {
 
     func exportToJSON() throws -> URL {
         let exportData = ExportData(
-            transactions: try database.fetchTransactions(),
+            transactions: try database.fetchTransactions(includeCancelled: true),
             categories: try database.fetchCategories(),
             accounts: try database.fetchAccounts(),
             budgets: try database.fetchBudgets(),

@@ -162,6 +162,38 @@ class AddTransactionViewModel: ObservableObject {
         }
     }
 
+    var isCancelled: Bool {
+        editingTransaction?.isCancelled ?? false
+    }
+
+    /// Cancels instead of deleting: the money goes back to the account, the transaction stays visible.
+    func cancelTransaction() async -> Bool {
+        guard let transaction = editingTransaction else { return false }
+        do {
+            try database.cancelTransaction(id: transaction.id)
+            Haptics.success()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            showError = true
+            return false
+        }
+    }
+
+    func restoreTransaction() async -> Bool {
+        guard let transaction = editingTransaction else { return false }
+        do {
+            try database.restoreTransaction(id: transaction.id)
+            Haptics.success()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            showError = true
+            return false
+        }
+    }
+
+    /// Permanent removal, offered only for cancelled transactions.
     func delete() async -> Bool {
         guard let transaction = editingTransaction else { return false }
         do {

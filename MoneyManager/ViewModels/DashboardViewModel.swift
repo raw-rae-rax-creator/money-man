@@ -35,7 +35,7 @@ class DashboardViewModel: ObservableObject {
             monthlyIncome = monthTransactions.filter { $0.type == .income }.reduce(0) { $0 + $1.amount }
             monthlyExpenses = monthTransactions.filter { $0.type == .expense }.reduce(0) { $0 + $1.amount }
 
-            let allTransactions = try database.fetchTransactions()
+            let allTransactions = try database.fetchTransactions(includeCancelled: true)
             recentTransactions = Array(allTransactions.prefix(10))
 
             let categories = try database.fetchCategories()

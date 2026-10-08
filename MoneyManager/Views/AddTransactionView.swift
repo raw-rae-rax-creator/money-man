@@ -9,6 +9,7 @@ struct AddTransactionView: View {
     @State private var showNewCategory = false
     @State private var showNewAccount = false
     @State private var showDeleteConfirmation = false
+    @State private var showCancelConfirmation = false
 
     init(editing transaction: Transaction? = nil) {
         _viewModel = StateObject(wrappedValue: AddTransactionViewModel(editing: transaction))
@@ -17,14 +18,22 @@ struct AddTransactionView: View {
     var body: some View {
         NavigationView {
             Form {
-                typeSection
-                amountSection
-                categorySection
-                accountSection
-                detailsSection
-                locationSection
-                tagsSection
-                recurringSection
+                if viewModel.isCancelled {
+                    cancelledSection
+                }
+                Group {
+                    typeSection
+                    amountSection
+                    categorySection
+                    accountSection
+                    detailsSection
+                    locationSection
+                    tagsSection
+                    recurringSection
+                }
+                // A cancelled transaction is read-only until it is restored.
+                .disabled(viewModel.isCancelled)
+
                 if viewModel.isEditing {
                     deleteSection
                 }
@@ -47,7 +56,7 @@ struct AddTransactionView: View {
                         }
                     }
                     .font(.body.weight(.semibold))
-                    .disabled(viewModel.isSaving)
+                    .disabled(viewModel.isSaving || viewModel.isCancelled)
                 }
 
                 ToolbarItemGroup(placement: .keyboard) {
@@ -63,7 +72,18 @@ struct AddTransactionView: View {
             } message: {
                 Text(viewModel.errorMessage)
             }
-            .confirmationDialog("Delete this transaction?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
+            .confirmationDialog("Void this transaction?", isPresented: $showCancelConfirmation, titleVisibility: .visible) {
+                Button("Void Transaction", role: .destructive) {
+                    Task {
+                        if await viewModel.cancelTransaction() {
+                            dismiss()
+                        }
+                    }
+                }
+            } message: {
+                Text("The amount goes back to the account. The transaction stays in the list marked as cancelled and no longer counts in statistics.")
+            }
+            .confirmationDialog("Delete permanently?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
                     Task {
                         if await viewModel.delete() {
@@ -72,7 +92,7 @@ struct AddTransactionView: View {
                     }
                 }
             } message: {
-                Text("The account balance will be adjusted.")
+                Text("The transaction will disappear from the list. This can't be undone.")
             }
             .sheet(isPresented: $showNewCategory) {
                 CategoryFormView(viewModel: categoryViewModel) { category in
@@ -257,12 +277,47 @@ struct AddTransactionView: View {
         }
     }
 
+    private var cancelledSection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Cancelled", systemImage: "xmark.circle.fill")
+                    .font(.headline)
+                    .foregroundColor(.orange)
+                if let cancelledAt = viewModel.editingTransaction?.cancelledAt {
+                    Text("Cancelled on \(cancelledAt.formatted(date: .abbreviated, time: .shortened)). It doesn't affect balances or statistics.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(.vertical, 4)
+
+            Button {
+                Task {
+                    if await viewModel.restoreTransaction() {
+                        dismiss()
+                    }
+                }
+            } label: {
+                Label("Restore Transaction", systemImage: "arrow.uturn.backward.circle")
+            }
+        }
+    }
+
+    @ViewBuilder
     private var deleteSection: some View {
         Section {
-            Button(role: .destructive) {
-                showDeleteConfirmation = true
-            } label: {
-                Label("Delete Transaction", systemImage: "trash")
+            if viewModel.isCancelled {
+                Button(role: .destructive) {
+                    showDeleteConfirmation = true
+                } label: {
+                    Label("Delete Permanently", systemImage: "trash")
+                }
+            } else {
+                Button(role: .destructive) {
+                    showCancelConfirmation = true
+                } label: {
+                    Label("Void Transaction", systemImage: "xmark.circle")
+                }
             }
         }
     }

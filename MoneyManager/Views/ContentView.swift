@@ -43,6 +43,11 @@ struct ContentView: View {
         }
         // Rebuild screens so every amount is re-formatted after a currency change.
         .id(currencyCode)
+        .onChange(of: currencyCode) { _ in
+            if AppIconManager.matchesCurrency {
+                AppIconManager.applyCurrent()
+            }
+        }
     }
 }
 

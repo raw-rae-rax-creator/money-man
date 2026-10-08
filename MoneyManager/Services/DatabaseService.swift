@@ -142,8 +142,9 @@ class DatabaseService {
         entity.latitude = transaction.latitude.map { NSNumber(value: $0) }
         entity.longitude = transaction.longitude.map { NSNumber(value: $0) }
         entity.placeName = transaction.placeName
+        entity.cancelledAt = transaction.cancelledAt
 
-        if adjustBalance {
+        if adjustBalance && !transaction.isCancelled {
             try self.adjustBalance(
                 accountId: transaction.accountId,
                 by: balanceEffect(type: transaction.type, amount: transaction.amount)
@@ -155,9 +156,15 @@ class DatabaseService {
     /// - Parameters:
     ///   - from: inclusive lower bound
     ///   - to: exclusive upper bound
-    func fetchTransactions(from: Date? = nil, to: Date? = nil) throws -> [Transaction] {
+    ///   - includeCancelled: cancelled transactions are left out by default so every
+    ///     total and statistic ignores them; lists that show them pass `true`.
+    func fetchTransactions(from: Date? = nil, to: Date? = nil, includeCancelled: Bool = false) throws -> [Transaction] {
         let request: NSFetchRequest<TransactionEntity> = TransactionEntity.fetchRequest()
         var predicates: [NSPredicate] = []
+
+        if !includeCancelled {
+            predicates.append(NSPredicate(format: "cancelledAt == nil"))
+        }
 
         if let from = from {
             predicates.append(NSPredicate(format: "date >= %@", from as NSDate))
@@ -187,13 +194,16 @@ class DatabaseService {
         guard let entity = try fetchEntity(TransactionEntity.self, named: "TransactionEntity", id: transaction.id) else { return }
 
         // Undo the old effect on the old account, then apply the new one.
-        if let oldType = TransactionType(rawValue: entity.type) {
-            try adjustBalance(accountId: entity.accountId, by: -balanceEffect(type: oldType, amount: entity.amount))
+        // A cancelled transaction has no effect on balances, so there is nothing to move.
+        if entity.cancelledAt == nil {
+            if let oldType = TransactionType(rawValue: entity.type) {
+                try adjustBalance(accountId: entity.accountId, by: -balanceEffect(type: oldType, amount: entity.amount))
+            }
+            try adjustBalance(
+                accountId: transaction.accountId,
+                by: balanceEffect(type: transaction.type, amount: transaction.amount)
+            )
         }
-        try adjustBalance(
-            accountId: transaction.accountId,
-            by: balanceEffect(type: transaction.type, amount: transaction.amount)
-        )
 
         entity.amount = transaction.amount
         entity.type = transaction.type.rawValue
@@ -211,13 +221,41 @@ class DatabaseService {
         try saveContext()
     }
 
+    /// Removes the transaction for good. Its amount goes back to the account unless it
+    /// was already cancelled (cancelling has returned the money already).
     func deleteTransaction(id: UUID) throws {
         guard let entity = try fetchEntity(TransactionEntity.self, named: "TransactionEntity", id: id) else { return }
+
+        if entity.cancelledAt == nil, let type = TransactionType(rawValue: entity.type) {
+            try adjustBalance(accountId: entity.accountId, by: -balanceEffect(type: type, amount: entity.amount))
+        }
+        context.delete(entity)
+        try saveContext()
+    }
+
+    /// Returns the money to the account and keeps the transaction, marked as cancelled.
+    func cancelTransaction(id: UUID) throws {
+        guard let entity = try fetchEntity(TransactionEntity.self, named: "TransactionEntity", id: id),
+              entity.cancelledAt == nil else { return }
 
         if let type = TransactionType(rawValue: entity.type) {
             try adjustBalance(accountId: entity.accountId, by: -balanceEffect(type: type, amount: entity.amount))
         }
-        context.delete(entity)
+        entity.cancelledAt = Date()
+        entity.updatedAt = Date()
+        try saveContext()
+    }
+
+    /// Undoes a cancellation: the amount is charged to (or added to) the account again.
+    func restoreTransaction(id: UUID) throws {
+        guard let entity = try fetchEntity(TransactionEntity.self, named: "TransactionEntity", id: id),
+              entity.cancelledAt != nil else { return }
+
+        if let type = TransactionType(rawValue: entity.type) {
+            try adjustBalance(accountId: entity.accountId, by: balanceEffect(type: type, amount: entity.amount))
+        }
+        entity.cancelledAt = nil
+        entity.updatedAt = Date()
         try saveContext()
     }
 

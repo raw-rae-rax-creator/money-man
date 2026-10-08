@@ -124,10 +124,27 @@ struct TransactionListView: View {
                             editingTransaction = transaction
                         }
                         .swipeActions {
-                            Button(role: .destructive) {
-                                Task { await viewModel.deleteTransaction(transaction) }
-                            } label: {
-                                Label("Delete", systemImage: "trash")
+                            if transaction.isCancelled {
+                                Button(role: .destructive) {
+                                    Task { await viewModel.deleteTransaction(transaction) }
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+
+                                Button {
+                                    Task { await viewModel.restoreTransaction(transaction) }
+                                } label: {
+                                    Label("Restore", systemImage: "arrow.uturn.backward")
+                                }
+                                .tint(.green)
+                            } else {
+                                // Not role: .destructive — the row stays in the list, just marked cancelled.
+                                Button {
+                                    Task { await viewModel.cancelTransaction(transaction) }
+                                } label: {
+                                    Label("Void", systemImage: "xmark.circle")
+                                }
+                                .tint(.red)
                             }
                         }
                     }
@@ -143,7 +160,7 @@ struct TransactionListView: View {
     }
 
     private func dayHeader(_ day: Date, items: [Transaction]) -> some View {
-        let net = items.reduce(0.0) { total, transaction in
+        let net = items.filter { !$0.isCancelled }.reduce(0.0) { total, transaction in
             switch transaction.type {
             case .income: return total + transaction.amount
             case .expense: return total - transaction.amount

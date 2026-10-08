@@ -10,9 +10,21 @@ struct TransactionRowView: View {
             CategoryIconView(category: category)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(category?.displayName ?? "Uncategorized".localized)
-                    .font(.subheadline.weight(.semibold))
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(category?.displayName ?? "Uncategorized".localized)
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+
+                    if transaction.isCancelled {
+                        Text("Cancelled")
+                            .font(.caption2.bold())
+                            .foregroundColor(.orange)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.orange.opacity(0.15))
+                            .clipShape(Capsule())
+                    }
+                }
 
                 if !transaction.note.isEmpty {
                     Text(transaction.note)
@@ -45,7 +57,8 @@ struct TransactionRowView: View {
             VStack(alignment: .trailing, spacing: 3) {
                 Text(verbatim: (transaction.type == .income ? "+" : "−") + transaction.amount.formattedAsCurrency())
                     .font(.subheadline.weight(.semibold).monospacedDigit())
-                    .foregroundColor(transaction.type == .income ? .green : .primary)
+                    .foregroundColor(amountColor)
+                    .strikethrough(transaction.isCancelled)
 
                 Text(transaction.date, style: .date)
                     .font(.caption2)
@@ -53,6 +66,12 @@ struct TransactionRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .opacity(transaction.isCancelled ? 0.55 : 1)
         .contentShape(Rectangle())
+    }
+
+    private var amountColor: Color {
+        if transaction.isCancelled { return .secondary }
+        return transaction.type == .income ? .green : .primary
     }
 }
