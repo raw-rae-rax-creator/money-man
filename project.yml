@@ -1,6 +1,6 @@
 name: moneai
 options:
-  bundleIdPrefix: com.moneymanager
+  bundleIdPrefix: com.khan
   developmentLanguage: en
   deploymentTarget:
     iOS: 15.0
@@ -34,7 +34,7 @@ targets:
       path: MoneyManager/Info.plist
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.moneymanager.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.khan.moneymanager.app
         INFOPLIST_KEY_CFBundleDisplayName: moneai
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
