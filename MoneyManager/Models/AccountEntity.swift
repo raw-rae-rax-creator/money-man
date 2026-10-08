@@ -25,7 +25,8 @@ public class AccountEntity: NSManagedObject {
             icon: icon,
             color: color,
             isActive: isActive,
-            includeInTotal: includeInTotal
+            includeInTotal: includeInTotal,
+            createdAt: createdAt
         )
     }
 }

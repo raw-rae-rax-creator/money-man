@@ -79,13 +79,13 @@ class AddTransactionViewModel: ObservableObject {
 
             // Keep the current choice only if it's valid for the selected type,
             // otherwise an income could end up saved with an expense category.
-            if !categories.contains(where: { $0.id == selectedCategory?.id }) {
-                selectedCategory = categories.first { $0.id == editingTransaction?.categoryId } ?? categories.first
-            }
+            // Re-pick from the fresh lists (by id): pickers match their selection with ==,
+            // and a stale copy with an old balance or name would no longer match any row.
+            let categoryId = selectedCategory?.id ?? editingTransaction?.categoryId
+            selectedCategory = categories.first { $0.id == categoryId } ?? categories.first
 
-            if !accounts.contains(where: { $0.id == selectedAccount?.id }) {
-                selectedAccount = accounts.first { $0.id == editingTransaction?.accountId } ?? accounts.first
-            }
+            let accountId = selectedAccount?.id ?? editingTransaction?.accountId
+            selectedAccount = accounts.first { $0.id == accountId } ?? accounts.first
         } catch {
             print("Error loading data: \(error)")
         }

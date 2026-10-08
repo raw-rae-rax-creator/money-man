@@ -39,6 +39,9 @@ struct BudgetView: View {
         .refreshable {
             await viewModel.loadBudgets()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .moneyDataDidChange)) { _ in
+            Task { await viewModel.loadBudgets() }
+        }
     }
 
     private var emptyState: some View {

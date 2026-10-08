@@ -39,7 +39,9 @@ public class TransactionEntity: NSManagedObject {
             latitude: latitude?.doubleValue,
             longitude: longitude?.doubleValue,
             placeName: placeName,
-            cancelledAt: cancelledAt
+            cancelledAt: cancelledAt,
+            createdAt: createdAt,
+            updatedAt: updatedAt
         )
     }
 }

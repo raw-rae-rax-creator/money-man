@@ -1,6 +1,12 @@
 import Foundation
 import CoreData
 
+extension Notification.Name {
+    /// Posted after accounts, transactions, categories, budgets or debts change,
+    /// so every open screen can reload instead of waiting for the tab to reappear.
+    static let moneyDataDidChange = Notification.Name("moneyDataDidChange")
+}
+
 class DatabaseService {
     static let shared = DatabaseService()
     private let container: NSPersistentContainer
@@ -67,6 +73,7 @@ class DatabaseService {
         guard context.hasChanges else { return }
         do {
             try context.save()
+            NotificationCenter.default.post(name: .moneyDataDidChange, object: nil)
         } catch {
             context.rollback()
             print("Error saving context: \(error)")

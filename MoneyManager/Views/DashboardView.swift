@@ -1,22 +1,37 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @Binding var selectedTab: AppTab
+    /// `false` when pushed from "More", which already provides navigation.
+    var embedInNavigation: Bool = true
+
+    @EnvironmentObject var router: TabRouter
     @StateObject private var viewModel = DashboardViewModel()
     @State private var showAddTransaction = false
     @State private var editingTransaction: Transaction?
+    /// Opened as a sheet when the target screen isn't in the tab bar.
+    @State private var sheetScreen: AppTab?
+
+    @AppStorage(AppPreferences.dashboardSectionsKey)
+    private var sectionsRaw = DashboardSection.encode(DashboardSection.defaultOrder)
+    @AppStorage(AppPreferences.dashboardCategoryStyleKey)
+    private var categoryStyleRaw = CategoryChartStyle.donut.rawValue
+
+    private var sections: [DashboardSection] {
+        DashboardSection.decode(sectionsRaw)
+    }
+
+    private var categoryStyle: CategoryChartStyle {
+        CategoryChartStyle(rawValue: categoryStyleRaw) ?? .donut
+    }
 
     var body: some View {
-        NavigationView {
+        NavigationContainer(embed: embedInNavigation) {
             ScrollView {
                 VStack(spacing: 16) {
                     balanceCard
-                    if viewModel.accounts.count > 1 {
-                        accountsStrip
+                    ForEach(sections) { section in
+                        sectionView(section)
                     }
-                    debtsCard
-                    recentTransactionsSection
-                    categoryBreakdownSection
                 }
                 .padding()
             }
@@ -39,14 +54,42 @@ struct DashboardView: View {
             .sheet(item: $editingTransaction, onDismiss: reload) { transaction in
                 AddTransactionView(editing: transaction)
             }
+            .sheet(item: $sheetScreen, onDismiss: reload) { screen in
+                AppScreen(tab: screen)
+            }
         }
-        .navigationViewStyle(.stack)
         // onAppear (not .task) so the data refreshes every time the tab is opened.
         .onAppear(perform: reload)
+        .onReceive(NotificationCenter.default.publisher(for: .moneyDataDidChange)) { _ in
+            reload()
+        }
     }
 
     private func reload() {
         Task { await viewModel.loadData() }
+    }
+
+    /// Switches tab when the screen is in the tab bar, otherwise shows it as a sheet.
+    private func open(_ screen: AppTab) {
+        if !router.show(screen) {
+            sheetScreen = screen
+        }
+    }
+
+    @ViewBuilder
+    private func sectionView(_ section: DashboardSection) -> some View {
+        switch section {
+        case .accounts:
+            if viewModel.accounts.count > 1 {
+                accountsStrip
+            }
+        case .debts:
+            debtsCard
+        case .recent:
+            recentTransactionsSection
+        case .categories:
+            categoryBreakdownSection
+        }
     }
 
     private var balanceCard: some View {
@@ -132,7 +175,7 @@ struct DashboardView: View {
 
     private var debtsCard: some View {
         Button {
-            selectedTab = .debts
+            open(.debts)
         } label: {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
@@ -190,7 +233,7 @@ struct DashboardView: View {
                     .font(.headline)
                 Spacer()
                 Button("See All") {
-                    selectedTab = .transactions
+                    open(.transactions)
                 }
                 .font(.subheadline)
             }
@@ -224,45 +267,116 @@ struct DashboardView: View {
 
     private var categoryBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Top Categories This Month")
-                .font(.headline)
+            HStack {
+                Text("Expenses This Month")
+                    .font(.headline)
+                Spacer()
+                // Quick switch between the donut and the list; also in More → Overview Layout.
+                Button {
+                    withAnimation {
+                        categoryStyleRaw = (categoryStyle == .donut ? CategoryChartStyle.list : .donut).rawValue
+                    }
+                } label: {
+                    Image(systemName: categoryStyle == .donut ? CategoryChartStyle.list.icon : CategoryChartStyle.donut.icon)
+                        .font(.subheadline.weight(.semibold))
+                }
+            }
 
             if viewModel.categoryBreakdown.isEmpty {
                 Text("No expenses this month")
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding()
+            } else if categoryStyle == .donut {
+                categoryDonut
             } else {
-                ForEach(viewModel.categoryBreakdown.prefix(5), id: \.category.id) { item in
-                    VStack(spacing: 6) {
-                        HStack {
-                            CategoryIconView(category: item.category, size: 28)
-                                .frame(width: 28)
-
-                            Text(item.category.displayName)
-                                .font(.subheadline)
-
-                            Spacer()
-
-                            Text(item.amount.formattedAsCurrency())
-                                .font(.subheadline.weight(.semibold).monospacedDigit())
-                            Text("\(Int(item.percentage.rounded()))%")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .frame(width: 40, alignment: .trailing)
-                        }
-
-                        ProgressView(value: min(item.percentage, 100), total: 100)
-                            .tint(Color(hex: item.category.color))
-                    }
-                    .padding(.vertical, 2)
-                }
+                categoryList
             }
         }
         .cardStyle()
     }
+
+    /// Top categories, with everything else folded into "Other".
+    private var donutItems: [(id: String, name: String, color: Color, amount: Double, percentage: Double)] {
+        let top = viewModel.categoryBreakdown.prefix(5).map {
+            (id: $0.category.id.uuidString, name: $0.category.displayName, color: Color(hex: $0.category.color),
+             amount: $0.amount, percentage: $0.percentage)
+        }
+        let rest = viewModel.categoryBreakdown.dropFirst(5)
+        guard !rest.isEmpty else { return top }
+        let restAmount = rest.reduce(0) { $0 + $1.amount }
+        let restPercentage = rest.reduce(0) { $0 + $1.percentage }
+        return top + [(id: "other", name: "Other".localized, color: Color(.systemGray3),
+                       amount: restAmount, percentage: restPercentage)]
+    }
+
+    private var categoryDonut: some View {
+        let items = donutItems
+
+        return HStack(alignment: .center, spacing: 16) {
+            ZStack {
+                DonutChart(segments: items.map { DonutSegment(id: $0.id, color: $0.color, value: $0.amount) })
+                VStack(spacing: 2) {
+                    Text("Spent")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Text(viewModel.monthlyExpenses.formattedAsCurrency())
+                        .font(.caption.weight(.bold).monospacedDigit())
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+                }
+                .padding(.horizontal, 30)
+            }
+            .frame(width: 150, height: 150)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(items, id: \.id) { item in
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(item.color)
+                            .frame(width: 9, height: 9)
+                        Text(item.name)
+                            .font(.caption)
+                            .lineLimit(1)
+                        Spacer(minLength: 4)
+                        Text("\(Int(item.percentage.rounded()))%")
+                            .font(.caption.weight(.semibold).monospacedDigit())
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+    }
+
+    private var categoryList: some View {
+        ForEach(viewModel.categoryBreakdown.prefix(5), id: \.category.id) { item in
+            VStack(spacing: 6) {
+                HStack {
+                    CategoryIconView(category: item.category, size: 28)
+                        .frame(width: 28)
+
+                    Text(item.category.displayName)
+                        .font(.subheadline)
+
+                    Spacer()
+
+                    Text(item.amount.formattedAsCurrency())
+                        .font(.subheadline.weight(.semibold).monospacedDigit())
+                    Text("\(Int(item.percentage.rounded()))%")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(width: 40, alignment: .trailing)
+                }
+
+                ProgressView(value: min(item.percentage, 100), total: 100)
+                    .tint(Color(hex: item.category.color))
+            }
+            .padding(.vertical, 2)
+        }
+    }
 }
 
 #Preview {
-    DashboardView(selectedTab: .constant(.dashboard))
+    DashboardView()
+        .environmentObject(TabRouter())
 }

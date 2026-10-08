@@ -37,6 +37,14 @@ class AccountViewModel: ObservableObject {
         !name.trimmed.isEmpty && (balance.trimmed.isEmpty || AppCurrency.parseAmount(balance) != nil)
     }
 
+    func toggleBalanceSign() {
+        if balance.hasPrefix("-") {
+            balance.removeFirst()
+        } else {
+            balance = "-" + (balance.isEmpty ? "0" : balance)
+        }
+    }
+
     func prepareNew() {
         editingAccount = nil
         name = ""

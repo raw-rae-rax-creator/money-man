@@ -38,6 +38,7 @@ class DebtsViewModel: ObservableObject {
     func saveDebts() {
         if let encoded = try? JSONEncoder().encode(debts) {
             UserDefaults.standard.set(encoded, forKey: Self.debtsKey)
+            NotificationCenter.default.post(name: .moneyDataDidChange, object: nil)
         }
     }
 

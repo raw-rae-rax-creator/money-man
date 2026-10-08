@@ -5,6 +5,193 @@ enum AppPreferences {
     static let showCategoryIconsKey = "showCategoryIcons"
     static let categoryPickerStyleKey = "categoryPickerStyle"
     static let saveLocationKey = "saveTransactionLocation"
+    static let dashboardSectionsKey = "dashboardSections"
+    static let dashboardCategoryStyleKey = "dashboardCategoryStyle"
+}
+
+// MARK: - Tab bar
+
+enum AppTab: String, CaseIterable, Identifiable {
+    case dashboard, transactions, debts, reports, accounts, categories, budgets, goals, bills
+    /// Always the last tab; holds settings and every screen that isn't in the tab bar.
+    case more
+
+    var id: String { rawValue }
+
+    /// Screens the user can put in the tab bar.
+    static let customizable: [AppTab] = [
+        .dashboard, .transactions, .debts, .reports, .accounts, .categories, .budgets, .goals, .bills
+    ]
+
+    /// Localization key of the title.
+    var title: String {
+        switch self {
+        case .dashboard: return "Overview"
+        case .transactions: return "Transactions"
+        case .debts: return "Debts"
+        case .reports: return "Reports"
+        case .accounts: return "Accounts"
+        case .categories: return "Categories"
+        case .budgets: return "Budgets"
+        case .goals: return "Savings Goals"
+        case .bills: return "Bills & Subscriptions"
+        case .more: return "More"
+        }
+    }
+
+    /// Short title for the tab bar, where long names don't fit.
+    var tabTitle: String {
+        switch self {
+        case .goals: return "Goals"
+        case .bills: return "Bills"
+        default: return title
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .dashboard: return "house.fill"
+        case .transactions: return "list.bullet.rectangle"
+        case .debts: return "person.2.fill"
+        case .reports: return "chart.pie.fill"
+        case .accounts: return "creditcard.fill"
+        case .categories: return "square.grid.2x2.fill"
+        case .budgets: return "chart.bar.fill"
+        case .goals: return "target"
+        case .bills: return "doc.text.fill"
+        case .more: return "ellipsis.circle.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .dashboard: return .blue
+        case .transactions: return .indigo
+        case .debts: return .orange
+        case .reports: return .pink
+        case .accounts: return .blue
+        case .categories: return .orange
+        case .budgets: return .green
+        case .goals: return .purple
+        case .bills: return .red
+        case .more: return .gray
+        }
+    }
+}
+
+/// Which screens are in the tab bar (user-configurable) and which tab is selected.
+final class TabRouter: ObservableObject {
+    static let storageKey = "tabBarItems"
+    /// iOS fits five tabs; the fifth is always "More".
+    static let maxTabs = 4
+    static let defaultTabs: [AppTab] = [.dashboard, .transactions, .debts, .reports]
+
+    @Published var selection: AppTab
+    @Published private(set) var tabs: [AppTab]
+
+    init() {
+        let saved = TabRouter.loadTabs()
+        tabs = saved
+        selection = saved.first ?? .more
+    }
+
+    private static func loadTabs() -> [AppTab] {
+        guard let raw = UserDefaults.standard.string(forKey: storageKey) else { return defaultTabs }
+        let saved = raw.split(separator: ",").compactMap { AppTab(rawValue: String($0)) }
+        return sanitized(saved)
+    }
+
+    private static func sanitized(_ list: [AppTab]) -> [AppTab] {
+        var unique: [AppTab] = []
+        for tab in list where tab != .more && !unique.contains(tab) {
+            unique.append(tab)
+        }
+        return Array(unique.prefix(maxTabs))
+    }
+
+    func setTabs(_ newTabs: [AppTab]) {
+        tabs = TabRouter.sanitized(newTabs)
+        UserDefaults.standard.set(tabs.map { $0.rawValue }.joined(separator: ","), forKey: TabRouter.storageKey)
+        if selection != .more && !tabs.contains(selection) {
+            selection = tabs.first ?? .more
+        }
+    }
+
+    /// Screens reachable only through "More".
+    var hiddenScreens: [AppTab] {
+        AppTab.customizable.filter { !tabs.contains($0) }
+    }
+
+    /// Switches to the tab if it's in the tab bar; returns `false` when it isn't.
+    @discardableResult
+    func show(_ tab: AppTab) -> Bool {
+        guard tabs.contains(tab) else { return false }
+        selection = tab
+        return true
+    }
+}
+
+// MARK: - Overview layout
+
+enum DashboardSection: String, CaseIterable, Identifiable {
+    case accounts, debts, recent, categories
+
+    var id: String { rawValue }
+
+    static let defaultOrder: [DashboardSection] = [.accounts, .debts, .recent, .categories]
+
+    var title: String {
+        switch self {
+        case .accounts: return "Accounts"
+        case .debts: return "Debts"
+        case .recent: return "Recent Transactions"
+        case .categories: return "Expenses by Category"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .accounts: return "creditcard.fill"
+        case .debts: return "person.2.fill"
+        case .recent: return "list.bullet.rectangle"
+        case .categories: return "chart.pie.fill"
+        }
+    }
+
+    /// Visible sections in order, stored as "accounts,debts,...". Hidden ones are left out.
+    static func decode(_ raw: String) -> [DashboardSection] {
+        var unique: [DashboardSection] = []
+        for part in raw.split(separator: ",") {
+            if let section = DashboardSection(rawValue: String(part)), !unique.contains(section) {
+                unique.append(section)
+            }
+        }
+        return unique
+    }
+
+    static func encode(_ sections: [DashboardSection]) -> String {
+        sections.map { $0.rawValue }.joined(separator: ",")
+    }
+}
+
+enum CategoryChartStyle: String, CaseIterable, Identifiable {
+    case donut, list
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .donut: return "Donut".localized
+        case .list: return "List".localized
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .donut: return "chart.pie"
+        case .list: return "list.bullet"
+        }
+    }
 }
 
 // MARK: - Localization

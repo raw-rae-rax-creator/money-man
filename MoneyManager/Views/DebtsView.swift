@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct DebtsView: View {
+    /// `false` when pushed from "More", which already provides navigation.
+    var embedInNavigation: Bool = true
     @StateObject private var viewModel = DebtsViewModel()
     @State private var selectedFilter: DebtFilter = .active
     @State private var selectedType: DebtType? = nil
@@ -15,7 +17,7 @@ struct DebtsView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationContainer(embed: embedInNavigation) {
             List {
                 Section {
                     summaryHeader
@@ -95,7 +97,6 @@ struct DebtsView: View {
                 }
             }
         }
-        .navigationViewStyle(.stack)
         .onAppear {
             viewModel.loadDebts()
         }

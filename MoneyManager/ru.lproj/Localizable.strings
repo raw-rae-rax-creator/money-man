@@ -66,7 +66,6 @@
 "See All" = "Все";
 "No transactions yet" = "Операций пока нет";
 "Add your first transaction" = "Добавить первую операцию";
-"Top Categories This Month" = "Топ категорий за месяц";
 "No expenses this month" = "В этом месяце расходов нет";
 "No active debts" = "Активных долгов нет";
 "Owed to me" = "Мне должны";
@@ -148,7 +147,6 @@
 "Account Name" = "Название счёта";
 "Starting Balance" = "Начальный баланс";
 "Balance" = "Баланс";
-"Use a minus sign for credit card debt." = "Для долга по кредитке используйте знак минус.";
 "Include in Total Balance" = "Учитывать в общем балансе";
 "No accounts yet" = "Счетов пока нет";
 "Debts are tracked separately and are not included here." = "Долги учитываются отдельно и сюда не входят.";
@@ -381,3 +379,21 @@
 "Currency Sign on Icon" = "Знак валюты на иконке";
 "There is no icon for this currency yet, so the wallet is used." = "Для этой валюты пока нет иконки, поэтому показан кошелёк.";
 "The icon shows ₸, ₽, $ or € and changes when you switch currency. Otherwise a wallet is shown." = "На иконке будет ₸, ₽, $ или €, и она сменится вместе с валютой. Иначе на иконке кошелёк.";
+
+/* MARK: - Tab bar & overview layout */
+"Goals" = "Цели";
+"Bills" = "Платежи";
+"Tab Bar" = "Панель вкладок";
+"In Tab Bar" = "На панели";
+"Available" = "Доступные";
+"All screens are in the tab bar" = "Все экраны уже на панели";
+"Up to %lld tabs plus More. Drag to reorder. Removed screens stay available in More." = "До %lld вкладок плюс «Ещё». Перетаскивайте, чтобы поменять порядок. Убранные экраны остаются доступны в «Ещё».";
+"Overview Layout" = "Вид главной";
+"Shown" = "Показаны";
+"Hidden" = "Скрыты";
+"The balance card is always at the top. Drag to reorder." = "Карточка баланса всегда сверху. Перетаскивайте, чтобы поменять порядок.";
+"Donut" = "Бублик";
+"List" = "Список";
+"Donut fills by each category's share of this month's expenses." = "Бублик заполняется долями категорий в расходах этого месяца.";
+"Expenses This Month" = "Расходы за месяц";
+"Tap ± to make the balance negative, e.g. for credit card debt." = "Нажмите ±, чтобы сделать баланс отрицательным, например для долга по кредитке.";

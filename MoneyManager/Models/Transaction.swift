@@ -49,7 +49,9 @@ struct Transaction: Identifiable, Codable {
         latitude: Double? = nil,
         longitude: Double? = nil,
         placeName: String? = nil,
-        cancelledAt: Date? = nil
+        cancelledAt: Date? = nil,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
     ) {
         self.id = id
         self.amount = amount
@@ -65,8 +67,8 @@ struct Transaction: Identifiable, Codable {
         self.longitude = longitude
         self.placeName = placeName
         self.cancelledAt = cancelledAt
-        self.createdAt = Date()
-        self.updatedAt = Date()
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
     }
 }
 

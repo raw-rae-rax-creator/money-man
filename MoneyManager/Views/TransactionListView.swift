@@ -1,12 +1,14 @@
 import SwiftUI
 
 struct TransactionListView: View {
+    /// `false` when pushed from "More", which already provides navigation.
+    var embedInNavigation: Bool = true
     @StateObject private var viewModel = TransactionListViewModel()
     @State private var showAddTransaction = false
     @State private var editingTransaction: Transaction?
 
     var body: some View {
-        NavigationView {
+        NavigationContainer(embed: embedInNavigation) {
             VStack(spacing: 0) {
                 filterBar
                 summaryBar
@@ -20,7 +22,8 @@ struct TransactionListView: View {
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("Transactions")
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                // Trailing, so it never covers the back button when pushed from "More".
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Picker("Date Range", selection: $viewModel.dateRange) {
                             ForEach(TransactionListViewModel.DateRange.allCases, id: \.self) { range in
@@ -46,8 +49,10 @@ struct TransactionListView: View {
                 AddTransactionView(editing: transaction)
             }
         }
-        .navigationViewStyle(.stack)
         .onAppear(perform: reload)
+        .onReceive(NotificationCenter.default.publisher(for: .moneyDataDidChange)) { _ in
+            reload()
+        }
     }
 
     private func reload() {

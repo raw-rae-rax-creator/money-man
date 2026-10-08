@@ -48,10 +48,8 @@ struct Account: Identifiable, Codable, Hashable {
         name.localized
     }
 
-    static func == (lhs: Account, rhs: Account) -> Bool {
-        return lhs.id == rhs.id
-    }
-
+    // Synthesized == compares every field so edits re-render rows; hashing by id is
+    // still consistent with that (equal values always share an id).
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
@@ -65,7 +63,8 @@ struct Account: Identifiable, Codable, Hashable {
         icon: String = "creditcard.fill",
         color: String = "#3498DB",
         isActive: Bool = true,
-        includeInTotal: Bool = true
+        includeInTotal: Bool = true,
+        createdAt: Date = Date()
     ) {
         self.id = id
         self.name = name
@@ -76,6 +75,6 @@ struct Account: Identifiable, Codable, Hashable {
         self.color = color
         self.isActive = isActive
         self.includeInTotal = includeInTotal
-        self.createdAt = Date()
+        self.createdAt = createdAt
     }
 }

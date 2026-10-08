@@ -8,6 +8,7 @@ struct MoneyManagerApp: App {
 
     init() {
         DatabaseService.shared.seedDefaultsIfNeeded()
+        KeyboardDismisser.configureScrollViews()
     }
 
     var body: some Scene {
@@ -22,6 +23,7 @@ struct MoneyManagerApp: App {
             .environmentObject(securityManager)
             .onAppear {
                 ThemeManager.apply(AppTheme(rawValue: themeRaw) ?? .system)
+                KeyboardDismisser.shared.install()
             }
             .onChange(of: themeRaw) { newValue in
                 ThemeManager.apply(AppTheme(rawValue: newValue) ?? .system)

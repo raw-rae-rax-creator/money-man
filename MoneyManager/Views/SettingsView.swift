@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 /// The "More" tab: secondary finance screens plus settings.
 struct SettingsView: View {
+    @EnvironmentObject var router: TabRouter
     @StateObject private var viewModel = SettingsViewModel()
     @AppStorage(AppCurrency.storageKey) private var currencyCode: String = AppCurrency.defaultCode
     @AppStorage(AppTheme.storageKey) private var themeRaw: String = AppTheme.system.rawValue
@@ -80,23 +81,23 @@ struct SettingsView: View {
         .navigationViewStyle(.stack)
     }
 
+    /// Every screen that isn't in the tab bar is reachable from here.
     private var financeSection: some View {
-        Section("Finance") {
-            NavigationLink(destination: AccountsView()) {
-                SettingsRow(title: "Accounts", icon: "creditcard.fill", color: .blue)
+        Section {
+            ForEach(router.hiddenScreens) { screen in
+                NavigationLink(destination: AppScreen(tab: screen, embedInNavigation: false)) {
+                    SettingsRow(title: LocalizedStringKey(screen.title), icon: screen.icon, color: screen.color)
+                }
             }
-            NavigationLink(destination: CategoryListView()) {
-                SettingsRow(title: "Categories", icon: "square.grid.2x2.fill", color: .orange)
+
+            NavigationLink(destination: TabBarSettingsView()) {
+                SettingsRow(title: "Tab Bar", icon: "dock.rectangle", color: .gray)
             }
-            NavigationLink(destination: BudgetView()) {
-                SettingsRow(title: "Budgets", icon: "chart.bar.fill", color: .green)
+            NavigationLink(destination: DashboardLayoutView()) {
+                SettingsRow(title: "Overview Layout", icon: "rectangle.3.group.fill", color: .blue)
             }
-            NavigationLink(destination: GoalsView()) {
-                SettingsRow(title: "Savings Goals", icon: "target", color: .purple)
-            }
-            NavigationLink(destination: BillsView()) {
-                SettingsRow(title: "Bills & Subscriptions", icon: "doc.text.fill", color: .red)
-            }
+        } header: {
+            Text("Finance")
         }
     }
 
@@ -304,6 +305,147 @@ struct SettingsRow: View {
     }
 }
 
+/// Choose and order up to four tabs; "More" is always the last one.
+struct TabBarSettingsView: View {
+    @EnvironmentObject var router: TabRouter
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(router.tabs) { tab in
+                    tabRow(tab)
+                }
+                .onMove { source, destination in
+                    var tabs = router.tabs
+                    tabs.move(fromOffsets: source, toOffset: destination)
+                    router.setTabs(tabs)
+                }
+                .onDelete { offsets in
+                    var tabs = router.tabs
+                    tabs.remove(atOffsets: offsets)
+                    router.setTabs(tabs)
+                }
+                .deleteDisabled(router.tabs.count <= 1)
+
+                tabRow(.more)
+                    .foregroundColor(.secondary)
+            } header: {
+                Text("In Tab Bar")
+            } footer: {
+                Text("Up to %lld tabs plus More. Drag to reorder. Removed screens stay available in More.".localizedFormat(TabRouter.maxTabs))
+            }
+
+            Section("Available") {
+                if router.hiddenScreens.isEmpty {
+                    Text("All screens are in the tab bar")
+                        .foregroundColor(.secondary)
+                }
+                ForEach(router.hiddenScreens) { screen in
+                    Button {
+                        withAnimation { router.setTabs(router.tabs + [screen]) }
+                    } label: {
+                        HStack {
+                            tabRow(screen)
+                            Spacer()
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(router.tabs.count < TabRouter.maxTabs ? .green : Color(.tertiaryLabel))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(router.tabs.count >= TabRouter.maxTabs)
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        // Always in edit mode: reorder handles and delete buttons are the whole point here.
+        .environment(\.editMode, .constant(.active))
+        .navigationTitle("Tab Bar")
+    }
+
+    private func tabRow(_ tab: AppTab) -> some View {
+        SettingsRow(title: LocalizedStringKey(tab.title), icon: tab.icon, color: tab.color)
+    }
+}
+
+/// Which cards the Overview shows, in which order, and how categories are drawn.
+struct DashboardLayoutView: View {
+    @AppStorage(AppPreferences.dashboardSectionsKey)
+    private var sectionsRaw = DashboardSection.encode(DashboardSection.defaultOrder)
+    @AppStorage(AppPreferences.dashboardCategoryStyleKey)
+    private var categoryStyleRaw = CategoryChartStyle.donut.rawValue
+
+    private var shown: [DashboardSection] {
+        DashboardSection.decode(sectionsRaw)
+    }
+
+    private var hidden: [DashboardSection] {
+        DashboardSection.allCases.filter { !shown.contains($0) }
+    }
+
+    var body: some View {
+        List {
+            Section {
+                Picker("Expenses by Category", selection: $categoryStyleRaw) {
+                    ForEach(CategoryChartStyle.allCases) { style in
+                        Label(style.title, systemImage: style.icon).tag(style.rawValue)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.vertical, 4)
+            } header: {
+                Text("Expenses by Category")
+            } footer: {
+                Text("Donut fills by each category's share of this month's expenses.")
+            }
+
+            Section {
+                ForEach(shown) { section in
+                    sectionRow(section)
+                }
+                .onMove { source, destination in
+                    var list = shown
+                    list.move(fromOffsets: source, toOffset: destination)
+                    sectionsRaw = DashboardSection.encode(list)
+                }
+                .onDelete { offsets in
+                    var list = shown
+                    list.remove(atOffsets: offsets)
+                    sectionsRaw = DashboardSection.encode(list)
+                }
+            } header: {
+                Text("Shown")
+            } footer: {
+                Text("The balance card is always at the top. Drag to reorder.")
+            }
+
+            if !hidden.isEmpty {
+                Section("Hidden") {
+                    ForEach(hidden) { section in
+                        Button {
+                            withAnimation { sectionsRaw = DashboardSection.encode(shown + [section]) }
+                        } label: {
+                            HStack {
+                                sectionRow(section)
+                                Spacer()
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundColor(.green)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .environment(\.editMode, .constant(.active))
+        .navigationTitle("Overview Layout")
+    }
+
+    private func sectionRow(_ section: DashboardSection) -> some View {
+        SettingsRow(title: LocalizedStringKey(section.title), icon: section.icon, color: .blue)
+    }
+}
+
 struct AppIconPickerView: View {
     @AppStorage(AppIconManager.styleKey) private var styleRaw = AppIconStyle.classic.rawValue
     @AppStorage(AppIconManager.matchCurrencyKey) private var matchesCurrency = false
@@ -457,4 +599,5 @@ extension URL: Identifiable {
 
 #Preview {
     SettingsView()
+        .environmentObject(TabRouter())
 }

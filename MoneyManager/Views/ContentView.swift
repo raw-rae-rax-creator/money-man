@@ -1,48 +1,29 @@
 import SwiftUI
 
-enum AppTab: Hashable {
-    case dashboard, transactions, debts, reports, more
-}
-
 struct ContentView: View {
-    @State private var selectedTab: AppTab = .dashboard
+    @StateObject private var router = TabRouter()
     @AppStorage(AppCurrency.storageKey) private var currencyCode: String = AppCurrency.defaultCode
 
     var body: some View {
-        // iOS shows at most 5 tabs; the rest live in "More".
-        TabView(selection: $selectedTab) {
-            DashboardView(selectedTab: $selectedTab)
-                .tabItem {
-                    Label("Overview", systemImage: "house.fill")
-                }
-                .tag(AppTab.dashboard)
-
-            TransactionListView()
-                .tabItem {
-                    Label("Transactions", systemImage: "list.bullet.rectangle")
-                }
-                .tag(AppTab.transactions)
-
-            DebtsView()
-                .tabItem {
-                    Label("Debts", systemImage: "person.2.fill")
-                }
-                .tag(AppTab.debts)
-
-            ReportsView()
-                .tabItem {
-                    Label("Reports", systemImage: "chart.pie.fill")
-                }
-                .tag(AppTab.reports)
+        // Up to 4 user-chosen tabs + "More" (iOS fits five). Configured in More → Tab Bar.
+        TabView(selection: $router.selection) {
+            ForEach(router.tabs) { tab in
+                AppScreen(tab: tab)
+                    .tabItem {
+                        Label(LocalizedStringKey(tab.tabTitle), systemImage: tab.icon)
+                    }
+                    .tag(tab)
+            }
 
             SettingsView()
                 .tabItem {
-                    Label("More", systemImage: "ellipsis.circle.fill")
+                    Label("More", systemImage: AppTab.more.icon)
                 }
                 .tag(AppTab.more)
         }
         // Rebuild screens so every amount is re-formatted after a currency change.
         .id(currencyCode)
+        .environmentObject(router)
         .onChange(of: currencyCode) { _ in
             if AppIconManager.matchesCurrency {
                 AppIconManager.applyCurrent()

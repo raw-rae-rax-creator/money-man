@@ -77,6 +77,9 @@ struct AccountsView: View {
         .onAppear {
             viewModel.loadAccounts()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .moneyDataDidChange)) { _ in
+            viewModel.loadAccounts()
+        }
     }
 }
 
@@ -140,15 +143,28 @@ struct AccountFormView: View {
 
                 Section {
                     HStack {
+                        // The digit pad has no minus key, so the sign is toggled with a button.
+                        Button {
+                            viewModel.toggleBalanceSign()
+                        } label: {
+                            Image(systemName: "plus.forwardslash.minus")
+                                .font(.body.weight(.semibold))
+                                .frame(width: 32, height: 32)
+                                .background(Color(.tertiarySystemFill))
+                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+
                         TextField("0", text: $viewModel.balance.amountFormatted(allowsNegative: true))
-                            .keyboardType(.numbersAndPunctuation)
+                            .keyboardType(.decimalPad)
+                            .foregroundColor(viewModel.balance.hasPrefix("-") ? .red : .primary)
                         Text(AppCurrency.symbol)
                             .foregroundColor(.secondary)
                     }
                 } header: {
                     Text(viewModel.editingAccount == nil ? LocalizedStringKey("Starting Balance") : LocalizedStringKey("Balance"))
                 } footer: {
-                    Text("Use a minus sign for credit card debt.")
+                    Text("Tap ± to make the balance negative, e.g. for credit card debt.")
                 }
 
                 Section("Color") {

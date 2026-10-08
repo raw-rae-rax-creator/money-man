@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ReportsView: View {
+    /// `false` when pushed from "More", which already provides navigation.
+    var embedInNavigation: Bool = true
     @State private var selectedPeriod: ReportPeriod = .month
     @State private var categoryData: [(category: Category, amount: Double)] = []
     @State private var totalIncome: Double = 0
@@ -25,7 +27,7 @@ struct ReportsView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationContainer(embed: embedInNavigation) {
             ScrollView {
                 VStack(spacing: 16) {
                     periodPicker
@@ -38,8 +40,10 @@ struct ReportsView: View {
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("Reports")
         }
-        .navigationViewStyle(.stack)
         .onAppear {
+            loadData()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .moneyDataDidChange)) { _ in
             loadData()
         }
     }

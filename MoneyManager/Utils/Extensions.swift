@@ -97,6 +97,57 @@ extension View {
     }
 }
 
+// MARK: - Keyboard
+
+/// Hides the keyboard when the user taps anywhere outside a text field, app-wide.
+/// `cancelsTouchesInView = false` keeps buttons and rows working as usual.
+final class KeyboardDismisser: NSObject, UIGestureRecognizerDelegate {
+    static let shared = KeyboardDismisser()
+    private let recognizerName = "dismissKeyboardOnTap"
+
+    /// Lists, forms and scroll views hide the keyboard as soon as they're dragged
+    /// (`.scrollDismissesKeyboard` needs iOS 16; this works on iOS 15 too).
+    static func configureScrollViews() {
+        UIScrollView.appearance().keyboardDismissMode = .onDrag
+    }
+
+    /// Call once windows exist (e.g. from the root view's onAppear). Safe to call repeatedly.
+    func install() {
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows
+            where !(window.gestureRecognizers ?? []).contains(where: { $0.name == recognizerName }) {
+                let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+                tap.name = recognizerName
+                tap.cancelsTouchesInView = false
+                tap.delegate = self
+                window.addGestureRecognizer(tap)
+            }
+        }
+    }
+
+    @objc private func handleTap(_ recognizer: UITapGestureRecognizer) {
+        recognizer.view?.endEditing(true)
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        // Tapping into another field should move focus there, not close the keyboard.
+        var view = touch.view
+        while let current = view {
+            if current is UITextField || current is UITextView { return false }
+            view = current.superview
+        }
+        return true
+    }
+
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        true
+    }
+}
+
 enum Haptics {
     static func success() {
         UINotificationFeedbackGenerator().notificationOccurred(.success)

@@ -18,10 +18,8 @@ struct Category: Identifiable, Codable, Hashable {
     var sortOrder: Int
     var createdAt: Date
 
-    static func == (lhs: Category, rhs: Category) -> Bool {
-        return lhs.id == rhs.id
-    }
-
+    // Synthesized == compares every field so edits re-render rows; hashing by id is
+    // still consistent with that (equal values always share an id).
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
@@ -35,7 +33,8 @@ struct Category: Identifiable, Codable, Hashable {
         parentId: UUID? = nil,
         budgetLimit: Double? = nil,
         isActive: Bool = true,
-        sortOrder: Int = 0
+        sortOrder: Int = 0,
+        createdAt: Date = Date()
     ) {
         self.id = id
         self.name = name
@@ -46,7 +45,7 @@ struct Category: Identifiable, Codable, Hashable {
         self.budgetLimit = budgetLimit
         self.isActive = isActive
         self.sortOrder = sortOrder
-        self.createdAt = Date()
+        self.createdAt = createdAt
     }
 }
 

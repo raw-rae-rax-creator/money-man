@@ -272,3 +272,105 @@ struct LocationMapPreview: View {
         URL(string: "http://maps.apple.com/?ll=\(latitude),\(longitude)&q=\(latitude),\(longitude)")
     }
 }
+
+// MARK: - Navigation
+
+/// Wraps a screen in its own NavigationView when it's a tab, and leaves it bare when
+/// it's pushed from "More" (a nested NavigationView would show two navigation bars).
+struct NavigationContainer<Content: View>: View {
+    let embed: Bool
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        if embed {
+            NavigationView {
+                content()
+            }
+            .navigationViewStyle(.stack)
+        } else {
+            content()
+        }
+    }
+}
+
+/// A screen of the app by tab identifier, used both for tabs and for "More" links.
+struct AppScreen: View {
+    let tab: AppTab
+    var embedInNavigation: Bool = true
+
+    var body: some View {
+        switch tab {
+        case .dashboard:
+            DashboardView(embedInNavigation: embedInNavigation)
+        case .transactions:
+            TransactionListView(embedInNavigation: embedInNavigation)
+        case .debts:
+            DebtsView(embedInNavigation: embedInNavigation)
+        case .reports:
+            ReportsView(embedInNavigation: embedInNavigation)
+        case .accounts:
+            NavigationContainer(embed: embedInNavigation) { AccountsView() }
+        case .categories:
+            NavigationContainer(embed: embedInNavigation) { CategoryListView() }
+        case .budgets:
+            NavigationContainer(embed: embedInNavigation) { BudgetView() }
+        case .goals:
+            NavigationContainer(embed: embedInNavigation) { GoalsView() }
+        case .bills:
+            NavigationContainer(embed: embedInNavigation) { BillsView() }
+        case .more:
+            SettingsView()
+        }
+    }
+}
+
+// MARK: - Donut chart
+
+struct DonutSegment: Identifiable {
+    let id: String
+    let color: Color
+    let value: Double
+}
+
+/// Ring chart where each segment's length is its share of the total.
+struct DonutChart: View {
+    let segments: [DonutSegment]
+    var lineWidth: CGFloat = 22
+    @State private var progress: CGFloat = 0
+
+    private var total: Double {
+        segments.reduce(0) { $0 + $1.value }
+    }
+
+    /// Fraction of the ring where the segment at `index` starts.
+    private func start(of index: Int) -> CGFloat {
+        guard total > 0 else { return 0 }
+        return CGFloat(segments.prefix(index).reduce(0) { $0 + $1.value } / total)
+    }
+
+    var body: some View {
+        // A small gap between segments keeps neighbouring colors apart.
+        let gap: CGFloat = segments.count > 1 ? 0.006 : 0
+
+        ZStack {
+            Circle()
+                .stroke(Color(.tertiarySystemFill), lineWidth: lineWidth)
+
+            ForEach(Array(segments.enumerated()), id: \.element.id) { index, segment in
+                let from = start(of: index)
+                let to = total > 0 ? from + CGFloat(segment.value / total) : from
+
+                Circle()
+                    .trim(from: from * progress, to: max(from, to - gap) * progress)
+                    .stroke(segment.color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt))
+                    .rotationEffect(.degrees(-90))
+            }
+        }
+        .padding(lineWidth / 2)
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.8)) {
+                progress = 1
+            }
+        }
+    }
+}

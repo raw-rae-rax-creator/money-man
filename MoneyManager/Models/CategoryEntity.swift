@@ -25,7 +25,8 @@ public class CategoryEntity: NSManagedObject {
             parentId: parentId,
             budgetLimit: budgetLimit > 0 ? budgetLimit : nil,
             isActive: isActive,
-            sortOrder: Int(sortOrder)
+            sortOrder: Int(sortOrder),
+            createdAt: createdAt
         )
     }
 }
