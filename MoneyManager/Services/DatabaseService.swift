@@ -130,6 +130,13 @@ class DatabaseService {
         account.balance += delta
     }
 
+    /// Moves money on an account without creating a transaction — used for debts,
+    /// which change balances but are not income or expenses.
+    func adjustAccountBalance(id: UUID, by delta: Double) throws {
+        try adjustBalance(accountId: id, by: delta)
+        try saveContext()
+    }
+
     /// - Parameter adjustBalance: pass `false` when importing data whose account
     ///   balances already include the transaction.
     func createTransaction(_ transaction: Transaction, adjustBalance: Bool = true) throws {

@@ -17,16 +17,20 @@ struct DebtRepayment: Identifiable, Codable, Hashable {
     var amount: Double
     var date: Date
     var note: String
+    /// Account the returned money went to / came from; `nil` leaves balances untouched.
+    var accountId: UUID?
 
-    init(id: UUID = UUID(), amount: Double, date: Date = Date(), note: String = "") {
+    init(id: UUID = UUID(), amount: Double, date: Date = Date(), note: String = "", accountId: UUID? = nil) {
         self.id = id
         self.amount = amount
         self.date = date
         self.note = note
+        self.accountId = accountId
     }
 }
 
-/// Долги хранятся отдельно от транзакций и не влияют на баланс и статистику доходов/расходов.
+/// Долги хранятся отдельно от транзакций: они двигают деньги на счетах (если выбран счёт),
+/// но не попадают в статистику доходов и расходов.
 struct Debt: Identifiable, Codable {
     let id: UUID
     var personName: String

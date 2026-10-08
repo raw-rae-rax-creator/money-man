@@ -16,7 +16,7 @@ struct AccountsView: View {
                         .font(.headline.monospacedDigit())
                 }
             } footer: {
-                Text("Debts are tracked separately and are not included here.")
+                Text("Lending and borrowing change account balances when the debt is linked to an account.")
             }
 
             Section("Accounts") {

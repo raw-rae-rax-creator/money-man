@@ -374,3 +374,22 @@ struct DonutChart: View {
         }
     }
 }
+
+// MARK: - Account picker
+
+/// Menu picker of accounts with a "don't change balance" option (`nil`).
+struct AccountPickerRow: View {
+    let title: LocalizedStringKey
+    let accounts: [Account]
+    @Binding var selection: UUID?
+
+    var body: some View {
+        Picker(title, selection: $selection) {
+            Text("Don't change balance").tag(UUID?.none)
+            ForEach(accounts) { account in
+                Text(account.displayName).tag(Optional(account.id))
+            }
+        }
+        .pickerStyle(.menu)
+    }
+}

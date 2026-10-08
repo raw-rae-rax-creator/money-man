@@ -217,7 +217,7 @@ struct DashboardView: View {
                     }
                 }
 
-                Text("Not included in balance or statistics")
+                Text("Not counted as income or expenses")
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }

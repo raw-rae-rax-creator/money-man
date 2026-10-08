@@ -17,9 +17,13 @@ class DebtsViewModel: ObservableObject {
     @Published var note: String = ""
     @Published var reminderEnabled: Bool = false
     @Published var reminderDaysBefore: Int = 3
+    /// Account the lent/borrowed money comes from / goes to; `nil` = don't touch balances.
+    @Published var accountId: UUID?
+    @Published var accounts: [Account] = []
 
     private static let debtsKey = ImportExportService.debtsKey
     private let notifications = NotificationService.shared
+    private let database = DatabaseService.shared
 
     static func loadStoredDebts() -> [Debt] {
         guard let data = UserDefaults.standard.data(forKey: debtsKey),
@@ -33,6 +37,54 @@ class DebtsViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         debts = Self.loadStoredDebts().sorted { $0.dateGiven > $1.dateGiven }
+        accounts = (try? database.fetchAccounts()) ?? []
+    }
+
+    func accountName(for id: UUID?) -> String? {
+        guard let id = id else { return nil }
+        return accounts.first { $0.id == id }?.displayName
+    }
+
+    // MARK: - Account balances
+
+    /// Net money each account gained (+) or lost (−) because of this debt:
+    /// lending takes money out, getting it back puts it in; borrowing is the opposite.
+    private func balanceEffects(of debt: Debt) -> [UUID: Double] {
+        let principalSign: Double = debt.type == .given ? -1 : 1
+        var effects: [UUID: Double] = [:]
+        if let accountId = debt.accountId {
+            effects[accountId, default: 0] += principalSign * debt.amount
+        }
+        for repayment in debt.repayments {
+            if let accountId = repayment.accountId {
+                effects[accountId, default: 0] -= principalSign * repayment.amount
+            }
+        }
+        return effects
+    }
+
+    /// Applies the difference between two states of a debt to the accounts
+    /// (`nil` old = new debt, `nil` new = deleted debt).
+    private func applyBalanceChange(from old: Debt?, to new: Debt?) {
+        var delta: [UUID: Double] = [:]
+        if let old = old {
+            for (accountId, amount) in balanceEffects(of: old) {
+                delta[accountId, default: 0] -= amount
+            }
+        }
+        if let new = new {
+            for (accountId, amount) in balanceEffects(of: new) {
+                delta[accountId, default: 0] += amount
+            }
+        }
+        for (accountId, amount) in delta where abs(amount) >= 0.005 {
+            do {
+                try database.adjustAccountBalance(id: accountId, by: amount)
+            } catch {
+                print("Error updating balance for debt: \(error)")
+            }
+        }
+        accounts = (try? database.fetchAccounts()) ?? accounts
     }
 
     func saveDebts() {
@@ -64,12 +116,14 @@ class DebtsViewModel: ObservableObject {
             expectedReturnDate: hasExpectedReturnDate ? expectedReturnDate : nil,
             status: .active,
             note: note.trimmed,
+            accountId: accountId,
             reminderEnabled: reminderEnabled && hasExpectedReturnDate,
             reminderDaysBefore: reminderDaysBefore
         )
 
         debts.insert(debt, at: 0)
         saveDebts()
+        applyBalanceChange(from: nil, to: debt)
         notifications.scheduleDebtReminder(for: debt)
         Haptics.success()
         resetForm()
@@ -87,10 +141,13 @@ class DebtsViewModel: ObservableObject {
         debt.note = note.trimmed
         debt.reminderEnabled = reminderEnabled && hasExpectedReturnDate
         debt.reminderDaysBefore = reminderDaysBefore
+        debt.accountId = accountId
 
         if let index = debts.firstIndex(where: { $0.id == debt.id }) {
+            let old = debts[index]
             debts[index] = debt
             saveDebts()
+            applyBalanceChange(from: old, to: debt)
             notifications.scheduleDebtReminder(for: debt)
             Haptics.success()
             resetForm()
@@ -98,12 +155,14 @@ class DebtsViewModel: ObservableObject {
     }
 
     /// Частичный (или полный) возврат. Когда вернули всё — долг закрывается автоматически.
-    func addRepayment(to debt: Debt, amount: Double, date: Date = Date(), note: String = "") {
+    /// The money goes to (or, for my own debt, comes from) `accountId`.
+    func addRepayment(to debt: Debt, amount: Double, date: Date = Date(), note: String = "", accountId: UUID?) {
         guard amount > 0, let index = debts.firstIndex(where: { $0.id == debt.id }) else { return }
         let payment = min(amount, debts[index].remainingAmount)
         guard payment > 0 else { return }
 
-        debts[index].repayments.append(DebtRepayment(amount: payment, date: date, note: note))
+        let old = debts[index]
+        debts[index].repayments.append(DebtRepayment(amount: payment, date: date, note: note, accountId: accountId))
         if debts[index].remainingAmount < 0.005 {
             debts[index].status = .returned
             debts[index].actualReturnDate = date
@@ -112,49 +171,64 @@ class DebtsViewModel: ObservableObject {
             notifications.scheduleDebtReminder(for: debts[index])
         }
         saveDebts()
+        applyBalanceChange(from: old, to: debts[index])
         Haptics.success()
     }
 
     func deleteRepayment(_ repayment: DebtRepayment, from debt: Debt) {
         guard let index = debts.firstIndex(where: { $0.id == debt.id }) else { return }
+        let old = debts[index]
         debts[index].repayments.removeAll { $0.id == repayment.id }
         if debts[index].status == .returned {
             debts[index].status = .active
             debts[index].actualReturnDate = nil
         }
         saveDebts()
+        applyBalanceChange(from: old, to: debts[index])
         notifications.scheduleDebtReminder(for: debts[index])
     }
 
-    func markAsReturned(_ debt: Debt) {
+    /// Closes the debt by recording the rest as one repayment, so the money reaches the account.
+    func markAsReturned(_ debt: Debt, accountId: UUID? = nil) {
         guard let index = debts.firstIndex(where: { $0.id == debt.id }) else { return }
-        debts[index].status = .returned
-        debts[index].actualReturnDate = Date()
-        saveDebts()
-        notifications.cancelDebtReminder(id: debt.id)
-        Haptics.success()
+        let remaining = debts[index].remainingAmount
+        if remaining > 0 {
+            addRepayment(to: debt, amount: remaining, accountId: accountId ?? debt.accountId)
+        } else {
+            debts[index].status = .returned
+            debts[index].actualReturnDate = Date()
+            saveDebts()
+            notifications.cancelDebtReminder(id: debt.id)
+            Haptics.success()
+        }
     }
 
+    /// Reopens a closed debt. The repayment that closed it is undone (with its money).
     func markAsActive(_ debt: Debt) {
         guard let index = debts.firstIndex(where: { $0.id == debt.id }) else { return }
+        let old = debts[index]
         debts[index].status = .active
         debts[index].actualReturnDate = nil
-        // Reopening a debt that was closed by repayments would leave nothing to repay.
-        if debts[index].remainingAmount <= 0 {
-            debts[index].repayments.removeAll()
+        if debts[index].remainingAmount <= 0, !debts[index].repayments.isEmpty {
+            debts[index].repayments.removeLast()
         }
         saveDebts()
+        applyBalanceChange(from: old, to: debts[index])
         notifications.scheduleDebtReminder(for: debts[index])
     }
 
+    /// Removing a debt also undoes its money movements on the accounts.
     func deleteDebt(_ debt: Debt) {
+        guard let old = debts.first(where: { $0.id == debt.id }) else { return }
         debts.removeAll { $0.id == debt.id }
         saveDebts()
+        applyBalanceChange(from: old, to: nil)
         notifications.cancelDebtReminder(id: debt.id)
     }
 
     func prepareNew() {
         resetForm()
+        accountId = accounts.first?.id
     }
 
     func editDebt(_ debt: Debt) {
@@ -168,6 +242,7 @@ class DebtsViewModel: ObservableObject {
         note = debt.note
         reminderEnabled = debt.reminderEnabled
         reminderDaysBefore = debt.reminderDaysBefore
+        accountId = debt.accountId
     }
 
     func resetForm() {
@@ -180,6 +255,7 @@ class DebtsViewModel: ObservableObject {
         note = ""
         reminderEnabled = false
         reminderDaysBefore = 3
+        accountId = nil
         editingDebt = nil
         showAddSheet = false
     }

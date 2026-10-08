@@ -71,7 +71,6 @@
 "Owed to me" = "Мне должны";
 "I owe" = "Я должен";
 "%lld overdue" = "просрочено: %lld";
-"Not included in balance or statistics" = "Не входят в баланс и статистику";
 
 /* MARK: - Transactions list */
 "No transactions found" = "Операции не найдены";
@@ -149,7 +148,6 @@
 "Balance" = "Баланс";
 "Include in Total Balance" = "Учитывать в общем балансе";
 "No accounts yet" = "Счетов пока нет";
-"Debts are tracked separately and are not included here." = "Долги учитываются отдельно и сюда не входят.";
 "Existing transactions are kept." = "Существующие операции сохранятся.";
 "%@ · not in total" = "%@ · не в итоге";
 
@@ -160,7 +158,6 @@
 "%@ owes me" = "%@ должен мне";
 "I owe %@" = "Я должен: %@";
 "%lld active" = "активных: %lld";
-"Debts don't affect your balance or income/expense statistics." = "Долги не влияют на баланс и статистику доходов и расходов.";
 "Active" = "Активные";
 "Overdue" = "Просрочены";
 "Returned" = "Возвращены";
@@ -397,3 +394,17 @@
 "Donut fills by each category's share of this month's expenses." = "Бублик заполняется долями категорий в расходах этого месяца.";
 "Expenses This Month" = "Расходы за месяц";
 "Tap ± to make the balance negative, e.g. for credit card debt." = "Нажмите ±, чтобы сделать баланс отрицательным, например для долга по кредитке.";
+
+/* MARK: - Debts & balances */
+"Not counted as income or expenses" = "Не считаются доходами и расходами";
+"Debts move money on accounts but aren't counted as income or expenses." = "Долги двигают деньги на счетах, но не считаются доходами и расходами.";
+"Lending and borrowing change account balances when the debt is linked to an account." = "Долги меняют баланс счёта, если к долгу привязан счёт.";
+"From Account" = "Со счёта";
+"To Account" = "На счёт";
+"Don't change balance" = "Не менять баланс";
+"Not linked" = "Не привязан";
+"The debt is only tracked; no account balance changes." = "Долг только учитывается, баланс счетов не меняется.";
+"The amount is taken from the account. It isn't counted as an expense." = "Сумма спишется со счёта. В расходы она не попадёт.";
+"The amount is added to the account. It isn't counted as income." = "Сумма поступит на счёт. В доходы она не попадёт.";
+"The returned money is added to the account balance." = "Возвращённые деньги поступят на счёт.";
+"The money you pay back is taken from the account balance." = "Деньги, которые вы отдаёте, спишутся со счёта.";

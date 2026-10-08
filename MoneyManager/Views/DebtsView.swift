@@ -136,7 +136,7 @@ struct DebtsView: View {
             .font(.caption)
             .padding(.horizontal, 4)
 
-            Text("Debts don't affect your balance or income/expense statistics.")
+            Text("Debts move money on accounts but aren't counted as income or expenses.")
                 .font(.caption2)
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -364,6 +364,9 @@ struct DebtDetailView: View {
     @State private var repaymentDate = Date()
     @State private var showEdit = false
     @State private var showDeleteConfirmation = false
+    /// Where returned money goes; starts as the debt's own account.
+    @State private var repaymentAccountId: UUID?
+    @State private var didSetRepaymentAccount = false
     @FocusState private var amountFocused: Bool
 
     private var debt: Debt? {
@@ -382,6 +385,12 @@ struct DebtDetailView: View {
             }
             .navigationTitle(debt?.personName ?? "")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                if !didSetRepaymentAccount {
+                    repaymentAccountId = debt?.accountId ?? viewModel.accounts.first?.id
+                    didSetRepaymentAccount = true
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
@@ -457,9 +466,14 @@ struct DebtDetailView: View {
                         .buttonStyle(.bordered)
                     }
                     DatePicker("Date", selection: $repaymentDate, displayedComponents: .date)
+                    AccountPickerRow(
+                        title: debt.type == .given ? "To Account" : "From Account",
+                        accounts: viewModel.accounts,
+                        selection: $repaymentAccountId
+                    )
                     Button {
                         if let value = AppCurrency.parseAmount(repaymentAmount) {
-                            viewModel.addRepayment(to: debt, amount: value, date: repaymentDate)
+                            viewModel.addRepayment(to: debt, amount: value, date: repaymentDate, accountId: repaymentAccountId)
                             repaymentAmount = ""
                             amountFocused = false
                         }
@@ -469,11 +483,17 @@ struct DebtDetailView: View {
                     .disabled((AppCurrency.parseAmount(repaymentAmount) ?? 0) <= 0)
                 } header: {
                     Text("Partial Repayment")
+                } footer: {
+                    if repaymentAccountId != nil {
+                        Text(debt.type == .given
+                             ? LocalizedStringKey("The returned money is added to the account balance.")
+                             : LocalizedStringKey("The money you pay back is taken from the account balance."))
+                    }
                 }
 
                 Section {
                     Button {
-                        viewModel.markAsReturned(debt)
+                        viewModel.markAsReturned(debt, accountId: repaymentAccountId)
                     } label: {
                         Label("Mark as Fully Returned", systemImage: "checkmark.circle.fill")
                             .foregroundColor(.green)
@@ -485,7 +505,14 @@ struct DebtDetailView: View {
                 Section("Repayments") {
                     ForEach(debt.repayments.sorted { $0.date > $1.date }) { repayment in
                         HStack {
-                            Text(repayment.date.formatted(date: .abbreviated, time: .omitted))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(repayment.date.formatted(date: .abbreviated, time: .omitted))
+                                if let name = viewModel.accountName(for: repayment.accountId) {
+                                    Text(name)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
                             Spacer()
                             Text(repayment.amount.formattedAsCurrency())
                                 .monospacedDigit()
@@ -505,6 +532,7 @@ struct DebtDetailView: View {
             Section("Details") {
                 row("Amount", debt.amount.formattedAsCurrency())
                 row("Date", debt.dateGiven.formatted(date: .long, time: .omitted))
+                row("Account", viewModel.accountName(for: debt.accountId) ?? "Not linked".localized)
                 if let expected = debt.expectedReturnDate {
                     row("Due", expected.formatted(date: .long, time: .omitted))
                 }
@@ -593,6 +621,22 @@ struct DebtFormView: View {
                             .font(.title2.weight(.semibold))
                         Text(AppCurrency.symbol)
                             .foregroundColor(.secondary)
+                    }
+                }
+
+                Section {
+                    AccountPickerRow(
+                        title: viewModel.debtType == .given ? "From Account" : "To Account",
+                        accounts: viewModel.accounts,
+                        selection: $viewModel.accountId
+                    )
+                } footer: {
+                    if viewModel.accountId == nil {
+                        Text("The debt is only tracked; no account balance changes.")
+                    } else if viewModel.debtType == .given {
+                        Text("The amount is taken from the account. It isn't counted as an expense.")
+                    } else {
+                        Text("The amount is added to the account. It isn't counted as income.")
                     }
                 }
 
